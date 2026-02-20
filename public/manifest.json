@@ -1,0 +1,31 @@
+{
+    "name": "Coin",
+    "short_name": "Coin",
+    "description": "Personal finance tracking — budget, income, and expenses.",
+    "start_url": "/dashboard",
+    "display": "standalone",
+    "background_color": "#0F0F1A",
+    "theme_color": "#7C3AED",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/icons/icon-192.png?v=3",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512.png?v=3",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512.png?v=3",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "categories": ["finance", "productivity"]
+}

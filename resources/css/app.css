@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html { @apply antialiased; }
+
+    body {
+        @apply font-sans text-gray-900 dark:text-gray-100 min-h-screen;
+        background-color: #f0edff;
+    }
+
+    .dark body,
+    body.dark {
+        background-color: #0F0F1A;
+    }
+}
+
+@layer components {
+    /* Ambient gradient blobs in the background */
+    .bg-app {
+        @apply relative;
+    }
+    .bg-app::before {
+        content: '';
+        @apply fixed inset-0 pointer-events-none;
+        background:
+            radial-gradient(ellipse 60% 50% at 10% 20%, rgba(124, 58, 237, 0.12) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 60% at 90% 80%, rgba(168, 85, 247, 0.10) 0%, transparent 70%),
+            radial-gradient(ellipse 40% 40% at 50% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
+        z-index: 0;
+    }
+    .dark .bg-app::before {
+        background:
+            radial-gradient(ellipse 60% 50% at 10% 20%, rgba(124, 58, 237, 0.18) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 60% at 90% 80%, rgba(168, 85, 247, 0.14) 0%, transparent 70%),
+            radial-gradient(ellipse 40% 40% at 50% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+    }
+
+    .card {
+        @apply bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl
+               border border-white/80 dark:border-white/[0.08]
+               rounded-2xl shadow-sm shadow-black/5 dark:shadow-black/20
+               p-4 sm:p-5;
+    }
+
+    .card-hoverable {
+        @apply transition-all duration-200 cursor-pointer;
+    }
+    .card-hoverable:hover {
+        border-color: rgba(124, 58, 237, 0.4);
+        box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.15), 0 4px 20px rgba(124, 58, 237, 0.12);
+    }
+
+    .glass-panel {
+        @apply bg-white/70 dark:bg-white/[0.05] backdrop-blur-2xl
+               border border-white/90 dark:border-white/[0.08];
+    }
+
+    .btn-primary {
+        @apply bg-coin-primary hover:bg-violet-700 text-white font-medium
+               px-4 py-2 rounded-xl transition-all duration-200
+               shadow-md shadow-violet-500/30 hover:shadow-lg hover:shadow-violet-500/40
+               active:scale-[0.98];
+    }
+
+    .btn-ghost {
+        @apply text-gray-600 dark:text-gray-300
+               hover:bg-white/60 dark:hover:bg-white/10
+               backdrop-blur-sm
+               px-4 py-2 rounded-xl transition-all duration-200;
+    }
+
+    .input {
+        @apply w-full rounded-xl
+               border border-white/60 dark:border-white/10
+               bg-white/50 dark:bg-white/[0.05]
+               backdrop-blur-sm
+               px-4 py-2.5 text-sm
+               text-gray-900 dark:text-gray-100
+               placeholder-gray-400 dark:placeholder-gray-600
+               focus:ring-2 focus:ring-coin-primary/50 focus:border-coin-primary/50
+               focus:outline-none
+               transition-all duration-200;
+    }
+
+    .gradient-card {
+        @apply bg-gradient-to-br from-violet-600 to-purple-700 text-white rounded-2xl shadow-lg p-5;
+    }
+}
