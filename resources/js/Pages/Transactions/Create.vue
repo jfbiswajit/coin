@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { WifiOff } from 'lucide-vue-next';
-import { onMounted, ref } from 'vue';
+import { CalendarDays, WifiOff } from 'lucide-vue-next';
+import { computed, onMounted, ref } from 'vue';
 import { queueOfflineTransaction, syncOfflineQueue } from '@/offline';
 import { useToast } from '@/composables/useToast';
 
@@ -39,6 +39,23 @@ const form = useForm({
     type: 'expense',
     transacted_at: new Date().toISOString().split('T')[0],
     title: '',
+});
+
+const relativeDate = (daysAgo: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    return d.toISOString().split('T')[0];
+};
+
+const setDate = (daysAgo: number) => { form.transacted_at = relativeDate(daysAgo); };
+const isRelativeDay = (daysAgo: number) => form.transacted_at === relativeDate(daysAgo);
+
+const formattedDate = computed(() => {
+    if (!form.transacted_at) return '';
+    const [y, m, d] = form.transacted_at.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
 });
 
 const submit = async () => {
@@ -127,8 +144,24 @@ const submit = async () => {
 
                 <!-- Date -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                    <input v-model="form.transacted_at" type="date" required class="input" />
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date</label>
+                    <div class="flex gap-2 mb-2">
+                        <button
+                            v-for="(label, i) in ['Today', 'Yesterday', '2 days ago']"
+                            :key="i"
+                            type="button"
+                            class="flex-1 py-2 rounded-xl text-xs font-medium transition-all border"
+                            :class="isRelativeDay(i)
+                                ? 'bg-coin-primary border-coin-primary text-white shadow-sm shadow-coin-primary/30'
+                                : 'bg-white/60 dark:bg-white/5 border-white/60 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-coin-primary/50'"
+                            @click="setDate(i)"
+                        >{{ label }}</button>
+                    </div>
+                    <div class="relative">
+                        <CalendarDays class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
+                        <input v-model="form.transacted_at" type="date" required class="input pl-9" />
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1.5 pl-1">{{ formattedDate }}</p>
                 </div>
 
                 <!-- Title -->

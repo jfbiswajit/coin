@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 
 const ready = ref(false);
@@ -47,6 +47,13 @@ const itemPct = (item: typeof props.budgets[0]) =>
 
 const isOver = (item: typeof props.budgets[0]) =>
     item.budget !== null && item.spent > item.budget;
+
+const search = ref('');
+const filteredBudgets = computed(() =>
+    search.value.trim()
+        ? props.budgets.filter(b => b.name.toLowerCase().includes(search.value.trim().toLowerCase()))
+        : props.budgets
+);
 
 const goToTransactions = (item: typeof props.budgets[0]) => {
     router.get('/transactions', {
@@ -112,10 +119,21 @@ const goToTransactions = (item: typeof props.budgets[0]) => {
                 </div>
             </div>
 
+            <!-- Search -->
+            <div class="relative">
+                <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
+                <input
+                    v-model="search"
+                    type="text"
+                    placeholder="Search categories…"
+                    class="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl bg-white/60 dark:bg-white/[0.05] border border-white/60 dark:border-white/10 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coin-primary/40"
+                />
+            </div>
+
             <!-- Budget grid -->
-            <div v-if="budgets.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-if="filteredBudgets.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div
-                    v-for="item in budgets"
+                    v-for="item in filteredBudgets"
                     :key="item.category_id"
                     class="card card-hoverable flex flex-col gap-3"
                     @click="goToTransactions(item)"
@@ -179,7 +197,7 @@ const goToTransactions = (item: typeof props.budgets[0]) => {
             </div>
 
             <div v-else class="card text-center py-12 text-sm text-gray-400 dark:text-gray-600">
-                Add expense categories to set budgets.
+                {{ search.trim() ? 'No categories match your search.' : 'Add expense categories to set budgets.' }}
             </div>
         </div>
 

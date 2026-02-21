@@ -2,6 +2,7 @@
 import AppModal from '@/Components/AppModal.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import DateTimePicker from '@/Components/DateTimePicker.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { ref, watch, computed, onMounted } from 'vue';
@@ -361,7 +362,7 @@ const confirmDelete = () => {
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date & Time</label>
-                    <input v-model="form.transacted_at" type="datetime-local" required class="input" />
+                    <DateTimePicker v-model="form.transacted_at" />
                     <p v-if="form.errors.transacted_at" class="mt-1 text-xs text-red-500">{{ form.errors.transacted_at }}</p>
                 </div>
 
@@ -428,7 +429,7 @@ const confirmDelete = () => {
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date & Time</label>
-                    <input v-model="editForm.transacted_at" type="datetime-local" required class="input" />
+                    <DateTimePicker v-model="editForm.transacted_at" />
                     <p v-if="editForm.errors.transacted_at" class="mt-1 text-xs text-red-500">{{ editForm.errors.transacted_at }}</p>
                 </div>
 
