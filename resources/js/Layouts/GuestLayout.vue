@@ -1,8 +1,31 @@
 <script setup lang="ts">
 import { useColorMode } from '@vueuse/core';
-import { Moon, Sun } from 'lucide-vue-next';
+import { Moon, Sun, TrendingUp, Target, BarChart2, WifiOff } from 'lucide-vue-next';
 
 const mode = useColorMode();
+
+const features = [
+    {
+        icon: TrendingUp,
+        title: 'Track every transaction',
+        desc: 'Log income & expenses across 14+ categories',
+    },
+    {
+        icon: Target,
+        title: 'Set monthly budgets',
+        desc: 'Stay on target with per-category spending limits',
+    },
+    {
+        icon: BarChart2,
+        title: 'Visual reports',
+        desc: 'Charts that show where your money actually goes',
+    },
+    {
+        icon: WifiOff,
+        title: 'Works offline',
+        desc: 'PWA — add to home screen, use anywhere',
+    },
+];
 </script>
 
 <template>
@@ -20,6 +43,7 @@ const mode = useColorMode();
             <div class="absolute top-1/3 -right-10 w-48 h-48 rounded-full bg-white/5 blur-xl" />
             <div class="absolute -bottom-16 left-20 w-96 h-96 rounded-full bg-white/5 blur-2xl" />
 
+            <!-- Logo -->
             <div class="relative">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
@@ -29,27 +53,49 @@ const mode = useColorMode();
                 </div>
             </div>
 
-            <div class="relative space-y-5">
-                <h1 class="text-4xl font-bold text-white leading-tight">
-                    Take control of<br/>your finances.
-                </h1>
-                <p class="text-white/70 text-lg leading-relaxed max-w-sm">
-                    Track income, set budgets, and understand where your money goes — beautifully.
-                </p>
-                <div class="flex items-center gap-6 pt-2">
-                    <div class="text-center">
-                        <div class="text-white font-bold text-2xl">14+</div>
-                        <div class="text-white/60 text-sm">Categories</div>
+            <!-- Hero + features -->
+            <div class="relative space-y-8">
+                <div class="space-y-3">
+                    <h1 class="text-4xl font-bold text-white leading-tight">
+                        Take control of<br/>your finances.
+                    </h1>
+                    <p class="text-white/70 text-lg leading-relaxed max-w-sm">
+                        Track income, set budgets, and understand where your money goes — beautifully.
+                    </p>
+                </div>
+
+                <!-- Feature list -->
+                <div class="space-y-4">
+                    <div
+                        v-for="f in features"
+                        :key="f.title"
+                        class="flex items-start gap-4"
+                    >
+                        <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <component :is="f.icon" class="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                            <div class="text-white font-medium text-sm leading-tight">{{ f.title }}</div>
+                            <div class="text-white/55 text-xs mt-0.5 leading-relaxed">{{ f.desc }}</div>
+                        </div>
                     </div>
-                    <div class="w-px h-10 bg-white/20" />
+                </div>
+
+                <!-- Stats row -->
+                <div class="flex items-center gap-6 pt-2 border-t border-white/15">
                     <div class="text-center">
-                        <div class="text-white font-bold text-2xl">PWA</div>
-                        <div class="text-white/60 text-sm">Works offline</div>
+                        <div class="text-white font-bold text-xl">14+</div>
+                        <div class="text-white/55 text-xs">Categories</div>
                     </div>
-                    <div class="w-px h-10 bg-white/20" />
+                    <div class="w-px h-8 bg-white/20" />
                     <div class="text-center">
-                        <div class="text-white font-bold text-2xl">∞</div>
-                        <div class="text-white/60 text-sm">Transactions</div>
+                        <div class="text-white font-bold text-xl">Free</div>
+                        <div class="text-white/55 text-xs">Always</div>
+                    </div>
+                    <div class="w-px h-8 bg-white/20" />
+                    <div class="text-center">
+                        <div class="text-white font-bold text-xl">∞</div>
+                        <div class="text-white/55 text-xs">Transactions</div>
                     </div>
                 </div>
             </div>
@@ -73,6 +119,23 @@ const mode = useColorMode();
                     <Sun v-if="mode === 'dark'" class="w-5 h-5" />
                     <Moon v-else class="w-5 h-5" />
                 </button>
+            </div>
+
+            <!-- Mobile hero (visible only on small screens) -->
+            <div class="lg:hidden px-6 pb-2">
+                <div class="rounded-2xl bg-gradient-to-br from-violet-600 via-purple-700 to-indigo-800 p-5 relative overflow-hidden">
+                    <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10 blur-xl" />
+                    <p class="text-white/80 text-sm font-medium mb-1 relative">Personal finance, simplified</p>
+                    <h2 class="text-white text-xl font-bold leading-snug relative">
+                        Track. Budget. Understand<br/>your money.
+                    </h2>
+                    <div class="flex gap-5 mt-4 relative">
+                        <div v-for="f in features.slice(0, 3)" :key="f.title" class="flex items-center gap-1.5">
+                            <component :is="f.icon" class="w-3.5 h-3.5 text-white/70 flex-shrink-0" />
+                            <span class="text-white/70 text-xs leading-tight">{{ f.title.split(' ').slice(0,2).join(' ') }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Centered form -->
