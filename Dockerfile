@@ -1,4 +1,11 @@
-# Stage 1: Build frontend assets
+# Stage 1: Install PHP dependencies
+FROM composer:2 AS composer-deps
+
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-interaction --ignore-platform-reqs
+
+# Stage 2: Build frontend assets
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -7,9 +14,11 @@ COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps
 
 COPY . .
+COPY --from=composer-deps /app/vendor ./vendor
+
 RUN npm run build
 
-# Stage 2: PHP-FPM application
+# Stage 3: PHP-FPM application
 FROM php:8.2-fpm-alpine AS app
 
 RUN apk add --no-cache \
@@ -37,14 +46,10 @@ RUN docker-php-ext-configure gd --with-jpeg \
         zip \
         opcache
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
 WORKDIR /var/www/html
 
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
-
 COPY . .
+COPY --from=composer-deps /app/vendor ./vendor
 COPY --from=builder /app/public/build ./public/build
 
 RUN chown -R www-data:www-data storage bootstrap/cache \
