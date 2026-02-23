@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -11,76 +10,89 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $month = (int) $request->get('month', now()->month);
-        $year = (int) $request->get('year', now()->year);
+        $month = now()->month;
+        $year = now()->year;
 
-        $summary = $user->transactions()
+        // ── ALL-TIME TOTALS BY TYPE ──────────────────────────────────────
+        $allTime = $user->transactions()
+            ->selectRaw('type, SUM(amount) as total')
+            ->groupBy('type')
+            ->pluck('total', 'type');
+
+        $balance = (float) ($allTime['income'] ?? 0)
+                 - (float) ($allTime['expense'] ?? 0)
+                 - (float) ($allTime['loan'] ?? 0)
+                 - (float) ($allTime['saving'] ?? 0);
+
+        // ── OUTSTANDING LOAN BALANCE ─────────────────────────────────────
+        $loanCategories = $user->categories()->where('type', 'loan')->get();
+
+        $loanPaidTotal = $user->transactions()
+            ->where('type', 'loan')
+            ->selectRaw('category_id, SUM(amount) as total')
+            ->groupBy('category_id')
+            ->pluck('total', 'category_id');
+
+        $totalLoanOutstanding = $loanCategories->sum(function ($cat) use ($loanPaidTotal) {
+            return max(0, (float) $cat->loan_amount - (float) ($loanPaidTotal[$cat->id] ?? 0));
+        });
+
+        // ── TOTAL SAVED ──────────────────────────────────────────────────
+        $totalSaved = (float) ($allTime['saving'] ?? 0);
+
+        // ── THIS MONTH INCOME & EXPENSE ────────────────────────────────────
+        $thisMonth = $user->transactions()
             ->whereYear('transacted_at', $year)
             ->whereMonth('transacted_at', $month)
             ->selectRaw('type, SUM(amount) as total')
             ->groupBy('type')
             ->pluck('total', 'type');
 
-        $totalIncome = (float) ($summary['income'] ?? 0);
-        $totalExpense = (float) ($summary['expense'] ?? 0);
-        $balance = $totalIncome - $totalExpense;
-        $savingsRate = $totalIncome > 0 ? round(($balance / $totalIncome) * 100, 1) : null;
+        $incomeThisMonth = (float) ($thisMonth['income'] ?? 0);
+        $spentThisMonth = (float) ($thisMonth['expense'] ?? 0)
+                        + (float) ($thisMonth['loan'] ?? 0)
+                        + (float) ($thisMonth['saving'] ?? 0);
 
-        $expenseByCategory = $user->transactions()
+        // ── MONEY NEEDED THIS MONTH ──────────────────────────────────────
+        $expenseCategoryIds = $user->categories()->where('type', 'expense')->pluck('id');
+
+        $totalBudget = (float) $user->budgets()
+            ->whereIn('category_id', $expenseCategoryIds)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->sum('amount');
+
+        $totalEMI = (float) $loanCategories->sum('emi_amount');
+
+        $savingCategories = $user->categories()->where('type', 'saving')->get();
+        $totalSavingTarget = (float) $savingCategories->sum('monthly_amount');
+
+        $moneyNeeded = $totalBudget + $totalEMI + $totalSavingTarget;
+
+        // ── RECENT TRANSACTIONS ──────────────────────────────────────────
+        $recent = $user->transactions()
             ->with('category')
-            ->whereYear('transacted_at', $year)
-            ->whereMonth('transacted_at', $month)
-            ->where('type', 'expense')
-            ->selectRaw('category_id, SUM(amount) as total')
-            ->groupBy('category_id')
-            ->get()
-            ->map(fn($t) => [
-                'label' => $t->category->name,
-                'color' => $t->category->color,
-                'total' => (float) $t->total,
-            ]);
-
-        $last6Months = collect();
-        for ($i = 5; $i >= 0; $i--) {
-            $d = Carbon::createFromDate($year, $month, 1)->startOfMonth()->subMonths($i);
-            $monthSummary = $user->transactions()
-                ->whereYear('transacted_at', $d->year)
-                ->whereMonth('transacted_at', $d->month)
-                ->selectRaw('type, SUM(amount) as total')
-                ->groupBy('type')
-                ->pluck('total', 'type');
-            $last6Months->push([
-                'label' => $d->format('M'),
-                'income' => (float) ($monthSummary['income'] ?? 0),
-                'expense' => (float) ($monthSummary['expense'] ?? 0),
-            ]);
-        }
-
-        $recentTransactions = $user->transactions()
-            ->with('category')
-            ->latest('created_at')
+            ->orderByDesc('transacted_at')
             ->limit(5)
             ->get()
             ->map(fn($t) => [
-                'id' => $t->id,
-                'amount' => (float) $t->amount,
-                'type' => $t->type,
-                'date' => $t->transacted_at->toIso8601String(),
-                'note' => $t->title,
-                'category' => [
-                    'name' => $t->category->name,
-                    'color' => $t->category->color,
-                    'icon' => $t->category->icon,
-                ],
+                'id'            => $t->id,
+                'amount'        => (float) $t->amount,
+                'type'          => $t->type,
+                'title'         => $t->title,
+                'transacted_at' => $t->transacted_at->format('Y-m-d'),
+                'category'      => ['name' => $t->category->name, 'color' => $t->category->color],
             ]);
 
         return Inertia::render('Dashboard', [
-            'stats' => compact('totalIncome', 'totalExpense', 'balance', 'savingsRate'),
-            'expenseByCategory' => $expenseByCategory,
-            'last6Months' => $last6Months,
-            'recentTransactions' => $recentTransactions,
-            'month' => $month,
-            'year' => $year,
+            'balance' => $balance,
+            'loanOutstanding' => $totalLoanOutstanding,
+            'totalSaved' => $totalSaved,
+            'incomeThisMonth' => $incomeThisMonth,
+            'spentThisMonth' => $spentThisMonth,
+            'moneyNeeded' => $moneyNeeded,
+            'monthLabel' => now()->format('F Y'),
+            'recent' => $recent,
         ]);
     }
 }

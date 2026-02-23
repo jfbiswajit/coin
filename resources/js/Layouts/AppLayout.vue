@@ -2,7 +2,6 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { useColorMode } from '@vueuse/core';
 import {
-    BarChart3,
     CircleDollarSign,
     LayoutDashboard,
     LogOut,
@@ -11,8 +10,11 @@ import {
     Sun,
     Tag,
 } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import Toast from '@/Components/Toast.vue';
+
+const ready = ref(false);
+onMounted(() => requestAnimationFrame(() => { ready.value = true; }));
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -27,7 +29,6 @@ const navItems = [
     { label: 'Transactions', href: '/transactions', icon: CircleDollarSign, name: 'transactions', mobileHidden: false },
     { label: 'Budget', href: '/budget', icon: PiggyBank, name: 'budget', mobileHidden: false },
     { label: 'Categories', href: '/categories', icon: Tag, name: 'categories', mobileHidden: true },
-    { label: 'Reports', href: '/reports', icon: BarChart3, name: 'reports', mobileHidden: true },
 ];
 
 const mobileNavItems = navItems.filter(item => !item.mobileHidden);
@@ -122,7 +123,8 @@ const isActive = (name: string) => page.component.toLowerCase().startsWith(name)
             </header>
 
             <!-- Page content -->
-            <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6">
+            <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6 transition-all duration-500"
+                :class="ready ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'">
                 <slot />
             </main>
         </div>
