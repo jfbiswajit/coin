@@ -66,7 +66,7 @@ class DashboardController extends Controller
 
         $recent = $user->transactions()
             ->with('category')
-            ->orderByDesc('transacted_at')
+            ->orderByDesc('created_at')
             ->limit(5)
             ->get()
             ->map(fn($t) => [
