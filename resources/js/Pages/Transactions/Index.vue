@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppModal from '@/Components/AppModal.vue';
+import DatePicker from '@/Components/DatePicker.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
@@ -378,7 +379,7 @@ const confirmDelete = () => {
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                    <input v-model="form.transacted_at" type="date" class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-sm text-gray-900 dark:text-white" />
+                    <DatePicker v-model="form.transacted_at" />
                     <p v-if="form.errors.transacted_at" class="mt-1 text-xs text-red-500">{{ form.errors.transacted_at }}</p>
                 </div>
 
@@ -454,7 +455,7 @@ const confirmDelete = () => {
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                    <input v-model="editForm.transacted_at" type="date" class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-sm text-gray-900 dark:text-white" />
+                    <DatePicker v-model="editForm.transacted_at" />
                     <p v-if="editForm.errors.transacted_at" class="mt-1 text-xs text-red-500">{{ editForm.errors.transacted_at }}</p>
                 </div>
 
