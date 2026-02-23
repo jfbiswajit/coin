@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    protected $fillable = ['user_id', 'name', 'type', 'color', 'icon', 'loan_amount', 'emi_amount', 'monthly_amount', 'target_amount'];
+    protected $fillable = ['user_id', 'name', 'type', 'color', 'icon', 'monthly_budget', 'loan_amount', 'emi_amount', 'monthly_amount', 'target_amount'];
 
     protected function casts(): array
     {
         return [
+            'monthly_budget' => 'decimal:2',
             'loan_amount' => 'decimal:2',
             'emi_amount' => 'decimal:2',
             'monthly_amount' => 'decimal:2',
@@ -26,10 +27,5 @@ class Category extends Model
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
-    }
-
-    public function budgets()
-    {
-        return $this->hasMany(Budget::class);
     }
 }

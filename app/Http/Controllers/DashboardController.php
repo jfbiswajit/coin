@@ -49,13 +49,7 @@ class DashboardController extends Controller
                         + (float) ($thisMonth['loan'] ?? 0)
                         + (float) ($thisMonth['saving'] ?? 0);
 
-        $expenseCategoryIds = $user->categories()->where('type', 'expense')->pluck('id');
-
-        $totalBudget = (float) $user->budgets()
-            ->whereIn('category_id', $expenseCategoryIds)
-            ->where('month', $month)
-            ->where('year', $year)
-            ->sum('amount');
+        $totalBudget = (float) $user->categories()->where('type', 'expense')->sum('monthly_budget');
 
         $totalEMI = (float) $loanCategories->sum('emi_amount');
 
@@ -69,13 +63,13 @@ class DashboardController extends Controller
             ->orderByDesc('created_at')
             ->limit(5)
             ->get()
-            ->map(fn($t) => [
-                'id'            => $t->id,
-                'amount'        => (float) $t->amount,
-                'type'          => $t->type,
-                'title'         => $t->title,
+            ->map(fn ($t) => [
+                'id' => $t->id,
+                'amount' => (float) $t->amount,
+                'type' => $t->type,
+                'title' => $t->title,
                 'transacted_at' => $t->transacted_at->format('Y-m-d'),
-                'category'      => ['name' => $t->category->name, 'color' => $t->category->color],
+                'category' => ['name' => $t->category->name, 'color' => $t->category->color],
             ]);
 
         return Inertia::render('Dashboard', [

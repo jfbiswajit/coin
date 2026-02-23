@@ -10,26 +10,17 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        $month = now()->month;
-        $year = now()->year;
-
-        $budgets = $user->budgets()
-            ->where('month', $month)
-            ->where('year', $year)
-            ->pluck('amount', 'category_id');
-
-        $categories = $user->categories()
+        $categories = $request->user()->categories()
             ->orderBy('type')
             ->orderBy('name')
             ->get()
-            ->map(fn($c) => [
+            ->map(fn ($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
                 'type' => $c->type,
                 'color' => $c->color,
                 'icon' => $c->icon,
-                'budget' => (float) ($budgets[$c->id] ?? 0),
+                'budget' => $c->monthly_budget !== null ? (float) $c->monthly_budget : 0,
                 'loan_amount' => $c->loan_amount !== null ? (float) $c->loan_amount : null,
                 'emi_amount' => $c->emi_amount !== null ? (float) $c->emi_amount : null,
                 'monthly_amount' => $c->monthly_amount !== null ? (float) $c->monthly_amount : null,
@@ -57,6 +48,7 @@ class CategoryController extends Controller
 
         if ($base['type'] === 'expense') {
             $extra = $request->validate(['budget_amount' => 'required|numeric|min:0']);
+            $categoryData['monthly_budget'] = $extra['budget_amount'];
         } elseif ($base['type'] === 'income') {
             $extra = $request->validate(['monthly_amount' => 'required|numeric|min:0.01']);
             $categoryData['monthly_amount'] = $extra['monthly_amount'];
@@ -76,16 +68,7 @@ class CategoryController extends Controller
             $categoryData['target_amount'] = $extra['target_amount'] ?? null;
         }
 
-        $category = $request->user()->categories()->create($categoryData);
-
-        if ($base['type'] === 'expense') {
-            $request->user()->budgets()->create([
-                'category_id' => $category->id,
-                'month' => now()->month,
-                'year' => now()->year,
-                'amount' => $extra['budget_amount'],
-            ]);
-        }
+        $request->user()->categories()->create($categoryData);
 
         return back();
     }
@@ -102,10 +85,7 @@ class CategoryController extends Controller
 
         if ($category->type === 'expense') {
             $extra = $request->validate(['budget_amount' => 'required|numeric|min:0']);
-            $request->user()->budgets()->updateOrCreate(
-                ['category_id' => $category->id, 'month' => now()->month, 'year' => now()->year],
-                ['amount' => $extra['budget_amount']]
-            );
+            $data['monthly_budget'] = $extra['budget_amount'];
         } elseif ($category->type === 'income') {
             $extra = $request->validate(['monthly_amount' => 'required|numeric|min:0.01']);
             $data['monthly_amount'] = $extra['monthly_amount'];
