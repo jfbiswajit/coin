@@ -19,9 +19,8 @@ class TransactionController extends Controller
             ->whereYear('transacted_at', $year)
             ->whereMonth('transacted_at', $month);
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
+        $type = $request->get('type', 'expense');
+        $query->where('type', $type);
 
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -49,7 +48,7 @@ class TransactionController extends Controller
         return Inertia::render('Transactions/Index', [
             'transactions' => $transactions,
             'categories' => $categories,
-            'filters' => ['month' => $month, 'year' => $year, 'type' => $request->type, 'category_id' => $request->category_id],
+            'filters' => ['month' => $month, 'year' => $year, 'type' => $type, 'category_id' => $request->category_id],
             'typeCounts' => [
                 'expense' => $typeCounts->get('expense', 0),
                 'income' => $typeCounts->get('income', 0),
