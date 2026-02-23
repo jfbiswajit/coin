@@ -264,7 +264,8 @@ const goToTransactions = (categoryId: number, type: string) => {
 
                         <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
                             <div
-                                class="h-full rounded-full transition-all duration-500 bg-orange-500"
+                                class="h-full rounded-full transition-all duration-500"
+                                :class="loanPct(item) >= 75 ? 'bg-emerald-500' : loanPct(item) >= 40 ? 'bg-amber-400' : 'bg-red-400'"
                                 :style="{ width: ready ? `${loanPct(item)}%` : '0%' }"
                             />
                         </div>
@@ -273,7 +274,13 @@ const goToTransactions = (categoryId: number, type: string) => {
                             <span class="text-xs text-gray-400 dark:text-gray-500">
                                 {{ fmt(item.total_paid) }} / {{ fmt(item.loan_amount) }}
                             </span>
-                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400">
+                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                                :class="loanPct(item) >= 75
+                                    ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                                    : loanPct(item) >= 40
+                                        ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                                        : 'bg-red-100 dark:bg-red-500/15 text-red-600 dark:text-red-400'"
+                            >
                                 {{ Math.round(loanPct(item)) }}% paid
                             </span>
                         </div>
