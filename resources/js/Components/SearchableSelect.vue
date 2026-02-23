@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { ChevronDown, X } from 'lucide-vue-next';
 
 const props = withDefaults(defineProps<{
@@ -19,6 +19,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>();
 const open = ref(false);
 const search = ref('');
 const container = ref<HTMLElement | null>(null);
+const searchInput = ref<HTMLInputElement | null>(null);
 
 const selected = computed(() => props.options.find(o => o.value === props.modelValue) ?? null);
 
@@ -34,7 +35,10 @@ const displayLabel = computed(() => {
 
 const toggle = () => {
     open.value = !open.value;
-    if (open.value) search.value = '';
+    if (open.value) {
+        search.value = '';
+        nextTick(() => searchInput.value?.focus());
+    }
 };
 
 const select = (value: string) => {
@@ -97,7 +101,7 @@ watch(() => props.modelValue, () => { search.value = ''; });
                     type="text"
                     placeholder="Search…"
                     class="w-full px-3 py-1.5 text-sm rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:ring-2 focus:ring-coin-primary/40"
-                    autofocus
+                    ref="searchInput"
                 />
             </div>
 
