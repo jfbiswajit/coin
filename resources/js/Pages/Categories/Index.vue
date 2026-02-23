@@ -40,12 +40,12 @@ const editForm = useForm({
 const listed = computed(() => props.categories.filter(c => c.type === activeTab.value));
 
 const presetColors = [
-    '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16',
-    '#22C55E', '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9',
-    '#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#D946EF',
-    '#EC4899', '#F43F5E', '#7C3AED', '#0D9488', '#059669',
-    '#DC2626', '#EA580C', '#CA8A04', '#65A30D', '#0284C7',
-    '#4F46E5', '#7E22CE', '#BE185D', '#64748B', '#475569',
+    '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#22C55E',
+    '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6',
+    '#6366F1', '#8B5CF6', '#A855F7', '#D946EF', '#EC4899',
+    '#7C3AED', '#0D9488', '#059669', '#EA580C', '#CA8A04',
+    '#65A30D', '#0284C7', '#4F46E5', '#7E22CE', '#64748B',
+    '#475569', '#0891B2', '#2563EB', '#9333EA', '#C026D3',
 ];
 
 const fmt = (v: number) => '৳' + new Intl.NumberFormat('en', { minimumFractionDigits: 2 }).format(v);
