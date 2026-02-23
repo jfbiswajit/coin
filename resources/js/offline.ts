@@ -9,7 +9,7 @@ interface OfflineTransaction {
     uuid: string;
     category_id: number;
     amount: number;
-    type: 'income' | 'expense';
+    type: 'income' | 'expense' | 'saving' | 'loan';
     title: string;
     transacted_at: string;
 }

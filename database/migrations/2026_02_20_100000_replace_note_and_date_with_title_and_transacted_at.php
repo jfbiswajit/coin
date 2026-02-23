@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::table('transactions', function (Blueprint $table) {
             $table->string('title')->nullable()->after('type');
-            $table->dateTime('transacted_at')->nullable()->after('title');
+            $table->date('transacted_at')->nullable()->after('title');
         });
 
         DB::table('transactions')->update([

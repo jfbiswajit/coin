@@ -14,15 +14,16 @@ class BudgetController extends Controller
         $month = (int) $request->get('month', now()->month);
         $year = (int) $request->get('year', now()->year);
 
-        $categories = $user->categories()->where('type', 'expense')->orderBy('name')->get();
+        // ── EXPENSE ───────────────────────────────────────────────────────────
+        $expenseCategories = $user->categories()->where('type', 'expense')->orderBy('name')->get();
 
-        $budgets = $user->budgets()
+        $currentBudgets = $user->budgets()
             ->where('month', $month)
             ->where('year', $year)
             ->get()
             ->keyBy('category_id');
 
-        $spent = $user->transactions()
+        $currentSpent = $user->transactions()
             ->where('type', 'expense')
             ->whereYear('transacted_at', $year)
             ->whereMonth('transacted_at', $month)
@@ -30,17 +31,76 @@ class BudgetController extends Controller
             ->groupBy('category_id')
             ->pluck('total', 'category_id');
 
-        $data = $categories->map(fn($cat) => [
+        $expenses = $expenseCategories->map(fn($cat) => [
             'category_id' => $cat->id,
             'name' => $cat->name,
             'color' => $cat->color,
             'icon' => $cat->icon,
-            'budget' => $budgets->has($cat->id) ? (float) $budgets[$cat->id]->amount : null,
-            'spent' => (float) ($spent[$cat->id] ?? 0),
+            'budget' => $currentBudgets->has($cat->id) ? (float) $currentBudgets[$cat->id]->amount : null,
+            'spent' => (float) ($currentSpent[$cat->id] ?? 0),
+        ]);
+
+        // ── LOAN ─────────────────────────────────────────────────────────────
+        $loanCategories = $user->categories()->where('type', 'loan')->orderBy('name')->get();
+
+        $loanPaidThisMonth = $user->transactions()
+            ->where('type', 'loan')
+            ->whereYear('transacted_at', $year)
+            ->whereMonth('transacted_at', $month)
+            ->selectRaw('category_id, SUM(amount) as total')
+            ->groupBy('category_id')
+            ->pluck('total', 'category_id');
+
+        $loanPaidTotal = $user->transactions()
+            ->where('type', 'loan')
+            ->selectRaw('category_id, SUM(amount) as total')
+            ->groupBy('category_id')
+            ->pluck('total', 'category_id');
+
+        $loans = $loanCategories->map(fn($cat) => [
+            'category_id' => $cat->id,
+            'name' => $cat->name,
+            'color' => $cat->color,
+            'icon' => $cat->icon,
+            'loan_amount' => (float) $cat->loan_amount,
+            'emi_amount' => (float) $cat->emi_amount,
+            'paid_this_month' => (float) ($loanPaidThisMonth[$cat->id] ?? 0),
+            'total_paid' => (float) ($loanPaidTotal[$cat->id] ?? 0),
+            'remaining' => max(0, (float) $cat->loan_amount - (float) ($loanPaidTotal[$cat->id] ?? 0)),
+        ]);
+
+        // ── SAVING ───────────────────────────────────────────────────────────
+        $savingCategories = $user->categories()->where('type', 'saving')->orderBy('name')->get();
+
+        $savedThisMonth = $user->transactions()
+            ->where('type', 'saving')
+            ->whereYear('transacted_at', $year)
+            ->whereMonth('transacted_at', $month)
+            ->selectRaw('category_id, SUM(amount) as total')
+            ->groupBy('category_id')
+            ->pluck('total', 'category_id');
+
+        $savedTotal = $user->transactions()
+            ->where('type', 'saving')
+            ->selectRaw('category_id, SUM(amount) as total')
+            ->groupBy('category_id')
+            ->pluck('total', 'category_id');
+
+        $savings = $savingCategories->map(fn($cat) => [
+            'category_id' => $cat->id,
+            'name' => $cat->name,
+            'color' => $cat->color,
+            'icon' => $cat->icon,
+            'monthly_amount' => (float) $cat->monthly_amount,
+            'target_amount' => $cat->target_amount !== null ? (float) $cat->target_amount : null,
+            'saved_this_month' => (float) ($savedThisMonth[$cat->id] ?? 0),
+            'total_saved' => (float) ($savedTotal[$cat->id] ?? 0),
         ]);
 
         return Inertia::render('Budget/Index', [
-            'budgets' => $data,
+            'expenses' => $expenses,
+            'loans' => $loans,
+            'savings' => $savings,
             'month' => $month,
             'year' => $year,
         ]);

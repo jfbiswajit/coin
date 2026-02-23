@@ -5,20 +5,37 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import { Plus } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
+type CategoryType = 'expense' | 'income' | 'saving' | 'loan';
+
 type Category = {
-    id: number; name: string; type: string; color: string;
-    icon: string; budget: number;
+    id: number; name: string; type: CategoryType; color: string; icon: string;
+    budget: number;
+    loan_amount: number | null; emi_amount: number | null;
+    monthly_amount: number | null; target_amount: number | null;
 };
 
 const props = defineProps<{ categories: Category[] }>();
 
-const activeTab = ref<'expense' | 'income'>('expense');
+const activeTab = ref<CategoryType>('expense');
 const showAdd = ref(false);
 const editTarget = ref<Category | null>(null);
 const confirmingDelete = ref(false);
 
-const addForm = useForm({ name: '', type: 'expense' as 'income' | 'expense', color: '#7C3AED', icon: 'circle', budget_amount: '' });
-const editForm = useForm({ name: '', color: '#7C3AED', icon: 'circle', budget_amount: '' as string | number });
+const addForm = useForm({
+    name: '', type: 'expense' as CategoryType, color: '#7C3AED', icon: 'circle',
+    budget_amount: '',
+    loan_amount: '', emi_amount: '',
+    monthly_amount: '', target_amount: '',
+});
+
+const editForm = useForm({
+    name: '', color: '#7C3AED', icon: 'circle',
+    budget_amount: '' as string | number,
+    loan_amount: '' as string | number,
+    emi_amount: '' as string | number,
+    monthly_amount: '' as string | number,
+    target_amount: '' as string | number,
+});
 
 const listed = computed(() => props.categories.filter(c => c.type === activeTab.value));
 
@@ -29,8 +46,14 @@ const presetColors = [
 ];
 
 const fmt = (v: number) => '৳' + new Intl.NumberFormat('en', { minimumFractionDigits: 2 }).format(v);
-
 const randomColor = () => presetColors[Math.floor(Math.random() * presetColors.length)];
+
+const tabConfig: Record<CategoryType, { label: string; color: string }> = {
+    expense: { label: 'Expense', color: 'bg-red-500' },
+    income: { label: 'Income', color: 'bg-emerald-500' },
+    saving: { label: 'Saving', color: 'bg-blue-500' },
+    loan: { label: 'Loan', color: 'bg-orange-500' },
+};
 
 const openEdit = (cat: Category) => {
     editTarget.value = cat;
@@ -38,6 +61,10 @@ const openEdit = (cat: Category) => {
     editForm.color = cat.color;
     editForm.icon = cat.icon;
     editForm.budget_amount = cat.budget;
+    editForm.loan_amount = cat.loan_amount ?? '';
+    editForm.emi_amount = cat.emi_amount ?? '';
+    editForm.monthly_amount = cat.monthly_amount ?? '';
+    editForm.target_amount = cat.target_amount ?? '';
     confirmingDelete.value = false;
 };
 
@@ -59,6 +86,17 @@ const confirmDelete = () => {
         onSuccess: () => { editTarget.value = null; confirmingDelete.value = false; },
     });
 };
+
+const cardSubtitle = (cat: Category) => {
+    if (cat.type === 'expense') return `${fmt(cat.budget)} / mo`;
+    if (cat.type === 'income') return cat.monthly_amount ? `${fmt(cat.monthly_amount)} / mo` : '';
+    if (cat.type === 'loan') return `EMI ${fmt(cat.emi_amount ?? 0)} · Total ${fmt(cat.loan_amount ?? 0)}`;
+    if (cat.type === 'saving') {
+        const base = `${fmt(cat.monthly_amount ?? 0)} / mo`;
+        return cat.target_amount ? `${base} · Goal ${fmt(cat.target_amount)}` : base;
+    }
+    return '';
+};
 </script>
 
 <template>
@@ -79,15 +117,15 @@ const confirmDelete = () => {
             <!-- Tabs -->
             <div class="flex gap-1 p-1 bg-gray-100 dark:bg-white/5 rounded-xl w-fit">
                 <button
-                    v-for="tab in (['expense', 'income'] as const)"
+                    v-for="tab in (['expense', 'income', 'saving', 'loan'] as const)"
                     :key="tab"
-                    class="px-5 py-1.5 rounded-lg text-sm font-medium transition-all capitalize"
+                    class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize"
                     :class="activeTab === tab
                         ? 'bg-white dark:bg-coin-dark-card text-gray-900 dark:text-white shadow-sm'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
                     @click="activeTab = tab"
                 >
-                    {{ tab }}
+                    {{ tabConfig[tab].label }}
                     <span class="ml-1.5 text-xs px-1.5 py-0.5 rounded-full"
                         :class="activeTab === tab ? 'bg-coin-primary/10 text-coin-primary' : 'bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-gray-400'"
                     >
@@ -110,12 +148,11 @@ const confirmDelete = () => {
                     >
                         {{ cat.name[0].toUpperCase() }}
                     </div>
-
                     <div class="flex-1 min-w-0">
                         <div class="font-semibold text-gray-900 dark:text-white truncate">{{ cat.name }}</div>
                         <div class="flex items-center gap-1.5 mt-0.5">
                             <div class="w-1.5 h-1.5 rounded-full" :style="{ backgroundColor: cat.color }" />
-                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ fmt(cat.budget) }} / mo</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ cardSubtitle(cat) }}</span>
                         </div>
                     </div>
                 </div>
@@ -126,7 +163,7 @@ const confirmDelete = () => {
                 <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-4">
                     <Plus class="w-7 h-7 text-gray-400" />
                 </div>
-                <p class="font-medium text-gray-600 dark:text-gray-400">No {{ activeTab }} categories</p>
+                <p class="font-medium text-gray-600 dark:text-gray-400">No {{ tabConfig[activeTab].label.toLowerCase() }} categories</p>
                 <p class="text-sm text-gray-400 dark:text-gray-600 mt-1">Add one to start tracking</p>
                 <button class="btn-primary mt-4 text-sm" @click="showAdd = true; addForm.type = activeTab; addForm.color = randomColor()">
                     Add category
@@ -151,17 +188,28 @@ const confirmDelete = () => {
                     </div>
                 </div>
 
-                <div class="flex rounded-xl overflow-hidden border border-gray-200 dark:border-white/10">
+                <!-- Type selector -->
+                <div class="grid grid-cols-4 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10">
                     <button type="button"
-                        class="flex-1 py-2 text-sm font-medium transition-all"
+                        class="py-2 text-xs font-medium transition-all"
                         :class="addForm.type === 'expense' ? 'bg-red-500 text-white' : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400'"
                         @click="addForm.type = 'expense'"
                     >Expense</button>
                     <button type="button"
-                        class="flex-1 py-2 text-sm font-medium transition-all"
+                        class="py-2 text-xs font-medium transition-all"
                         :class="addForm.type === 'income' ? 'bg-emerald-500 text-white' : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400'"
                         @click="addForm.type = 'income'"
                     >Income</button>
+                    <button type="button"
+                        class="py-2 text-xs font-medium transition-all"
+                        :class="addForm.type === 'saving' ? 'bg-blue-500 text-white' : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400'"
+                        @click="addForm.type = 'saving'"
+                    >Saving</button>
+                    <button type="button"
+                        class="py-2 text-xs font-medium transition-all"
+                        :class="addForm.type === 'loan' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400'"
+                        @click="addForm.type = 'loan'"
+                    >Loan</button>
                 </div>
 
                 <div>
@@ -170,22 +218,65 @@ const confirmDelete = () => {
                     <p v-if="addForm.errors.name" class="mt-1 text-xs text-red-500">{{ addForm.errors.name }}</p>
                 </div>
 
-                <div>
+                <!-- Expense: monthly budget -->
+                <div v-if="addForm.type === 'expense'">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Budget</label>
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
-                        <input
-                            v-model="addForm.budget_amount"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            required
-                            placeholder="0.00"
-                            class="input pl-7"
-                        />
+                        <input v-model="addForm.budget_amount" type="number" step="0.01" min="0" required placeholder="0.00" class="input pl-7" />
                     </div>
                     <p v-if="addForm.errors.budget_amount" class="mt-1 text-xs text-red-500">{{ addForm.errors.budget_amount }}</p>
                 </div>
+
+                <!-- Income: expected monthly amount -->
+                <div v-if="addForm.type === 'income'">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expected Monthly Amount</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
+                        <input v-model="addForm.monthly_amount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="input pl-7" />
+                    </div>
+                    <p v-if="addForm.errors.monthly_amount" class="mt-1 text-xs text-red-500">{{ addForm.errors.monthly_amount }}</p>
+                </div>
+
+                <!-- Loan: total amount + EMI -->
+                <template v-if="addForm.type === 'loan'">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Loan Amount</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
+                            <input v-model="addForm.loan_amount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="input pl-7" />
+                        </div>
+                        <p v-if="addForm.errors.loan_amount" class="mt-1 text-xs text-red-500">{{ addForm.errors.loan_amount }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly EMI</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
+                            <input v-model="addForm.emi_amount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="input pl-7" />
+                        </div>
+                        <p v-if="addForm.errors.emi_amount" class="mt-1 text-xs text-red-500">{{ addForm.errors.emi_amount }}</p>
+                    </div>
+                </template>
+
+                <!-- Saving: monthly contribution + optional target -->
+                <template v-if="addForm.type === 'saving'">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Contribution</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
+                            <input v-model="addForm.monthly_amount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="input pl-7" />
+                        </div>
+                        <p v-if="addForm.errors.monthly_amount" class="mt-1 text-xs text-red-500">{{ addForm.errors.monthly_amount }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Amount <span class="text-gray-400">(optional)</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
+                            <input v-model="addForm.target_amount" type="number" step="0.01" min="0" placeholder="0.00" class="input pl-7" />
+                        </div>
+                        <p v-if="addForm.errors.target_amount" class="mt-1 text-xs text-red-500">{{ addForm.errors.target_amount }}</p>
+                    </div>
+                </template>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color</label>
@@ -230,22 +321,65 @@ const confirmDelete = () => {
                     <p v-if="editForm.errors.name" class="mt-1 text-xs text-red-500">{{ editForm.errors.name }}</p>
                 </div>
 
-                <div>
+                <!-- Expense: monthly budget -->
+                <div v-if="editTarget.type === 'expense'">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Budget</label>
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
-                        <input
-                            v-model="editForm.budget_amount"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            required
-                            placeholder="0.00"
-                            class="input pl-7"
-                        />
+                        <input v-model="editForm.budget_amount" type="number" step="0.01" min="0" required placeholder="0.00" class="input pl-7" />
                     </div>
                     <p v-if="editForm.errors.budget_amount" class="mt-1 text-xs text-red-500">{{ editForm.errors.budget_amount }}</p>
                 </div>
+
+                <!-- Income: expected monthly amount -->
+                <div v-if="editTarget.type === 'income'">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expected Monthly Amount</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
+                        <input v-model="editForm.monthly_amount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="input pl-7" />
+                    </div>
+                    <p v-if="editForm.errors.monthly_amount" class="mt-1 text-xs text-red-500">{{ editForm.errors.monthly_amount }}</p>
+                </div>
+
+                <!-- Loan fields -->
+                <template v-if="editTarget.type === 'loan'">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Loan Amount</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
+                            <input v-model="editForm.loan_amount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="input pl-7" />
+                        </div>
+                        <p v-if="editForm.errors.loan_amount" class="mt-1 text-xs text-red-500">{{ editForm.errors.loan_amount }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly EMI</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
+                            <input v-model="editForm.emi_amount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="input pl-7" />
+                        </div>
+                        <p v-if="editForm.errors.emi_amount" class="mt-1 text-xs text-red-500">{{ editForm.errors.emi_amount }}</p>
+                    </div>
+                </template>
+
+                <!-- Saving fields -->
+                <template v-if="editTarget.type === 'saving'">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Contribution</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
+                            <input v-model="editForm.monthly_amount" type="number" step="0.01" min="0.01" required placeholder="0.00" class="input pl-7" />
+                        </div>
+                        <p v-if="editForm.errors.monthly_amount" class="mt-1 text-xs text-red-500">{{ editForm.errors.monthly_amount }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Amount <span class="text-gray-400">(optional)</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400 select-none pointer-events-none">৳</span>
+                            <input v-model="editForm.target_amount" type="number" step="0.01" min="0" placeholder="0.00" class="input pl-7" />
+                        </div>
+                        <p v-if="editForm.errors.target_amount" class="mt-1 text-xs text-red-500">{{ editForm.errors.target_amount }}</p>
+                    </div>
+                </template>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color</label>

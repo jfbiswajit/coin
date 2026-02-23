@@ -12,7 +12,7 @@ class Transaction extends Model
     {
         return [
             'amount' => 'decimal:2',
-            'transacted_at' => 'datetime',
+            'transacted_at' => 'date',
         ];
     }
 

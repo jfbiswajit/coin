@@ -23,36 +23,69 @@ class CategoryController extends Controller
             ->orderBy('type')
             ->orderBy('name')
             ->get()
-            ->map(fn($c) => array_merge($c->toArray(), [
+            ->map(fn($c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'type' => $c->type,
+                'color' => $c->color,
+                'icon' => $c->icon,
                 'budget' => (float) ($budgets[$c->id] ?? 0),
-            ]));
+                'loan_amount' => $c->loan_amount !== null ? (float) $c->loan_amount : null,
+                'emi_amount' => $c->emi_amount !== null ? (float) $c->emi_amount : null,
+                'monthly_amount' => $c->monthly_amount !== null ? (float) $c->monthly_amount : null,
+                'target_amount' => $c->target_amount !== null ? (float) $c->target_amount : null,
+            ]);
 
         return Inertia::render('Categories/Index', ['categories' => $categories]);
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $base = $request->validate([
             'name' => 'required|string|max:100',
-            'type' => 'required|in:income,expense',
+            'type' => 'required|in:income,expense,saving,loan',
             'color' => 'required|string|size:7',
             'icon' => 'required|string|max:50',
-            'budget_amount' => 'required|numeric|min:0',
         ]);
 
-        $category = $request->user()->categories()->create([
-            'name' => $data['name'],
-            'type' => $data['type'],
-            'color' => $data['color'],
-            'icon' => $data['icon'],
-        ]);
+        $categoryData = [
+            'name' => $base['name'],
+            'type' => $base['type'],
+            'color' => $base['color'],
+            'icon' => $base['icon'],
+        ];
 
-        $request->user()->budgets()->create([
-            'category_id' => $category->id,
-            'month' => now()->month,
-            'year' => now()->year,
-            'amount' => $data['budget_amount'],
-        ]);
+        if ($base['type'] === 'expense') {
+            $extra = $request->validate(['budget_amount' => 'required|numeric|min:0']);
+        } elseif ($base['type'] === 'income') {
+            $extra = $request->validate(['monthly_amount' => 'required|numeric|min:0.01']);
+            $categoryData['monthly_amount'] = $extra['monthly_amount'];
+        } elseif ($base['type'] === 'loan') {
+            $extra = $request->validate([
+                'loan_amount' => 'required|numeric|min:0.01',
+                'emi_amount' => 'required|numeric|min:0.01',
+            ]);
+            $categoryData['loan_amount'] = $extra['loan_amount'];
+            $categoryData['emi_amount'] = $extra['emi_amount'];
+        } elseif ($base['type'] === 'saving') {
+            $extra = $request->validate([
+                'monthly_amount' => 'required|numeric|min:0.01',
+                'target_amount' => 'nullable|numeric|min:0',
+            ]);
+            $categoryData['monthly_amount'] = $extra['monthly_amount'];
+            $categoryData['target_amount'] = $extra['target_amount'] ?? null;
+        }
+
+        $category = $request->user()->categories()->create($categoryData);
+
+        if ($base['type'] === 'expense') {
+            $request->user()->budgets()->create([
+                'category_id' => $category->id,
+                'month' => now()->month,
+                'year' => now()->year,
+                'amount' => $extra['budget_amount'],
+            ]);
+        }
 
         return back();
     }
@@ -65,19 +98,34 @@ class CategoryController extends Controller
             'name' => 'required|string|max:100',
             'color' => 'required|string|size:7',
             'icon' => 'required|string|max:50',
-            'budget_amount' => 'required|numeric|min:0',
         ]);
 
-        $category->update([
-            'name' => $data['name'],
-            'color' => $data['color'],
-            'icon' => $data['icon'],
-        ]);
+        if ($category->type === 'expense') {
+            $extra = $request->validate(['budget_amount' => 'required|numeric|min:0']);
+            $request->user()->budgets()->updateOrCreate(
+                ['category_id' => $category->id, 'month' => now()->month, 'year' => now()->year],
+                ['amount' => $extra['budget_amount']]
+            );
+        } elseif ($category->type === 'income') {
+            $extra = $request->validate(['monthly_amount' => 'required|numeric|min:0.01']);
+            $data['monthly_amount'] = $extra['monthly_amount'];
+        } elseif ($category->type === 'loan') {
+            $extra = $request->validate([
+                'loan_amount' => 'required|numeric|min:0.01',
+                'emi_amount' => 'required|numeric|min:0.01',
+            ]);
+            $data['loan_amount'] = $extra['loan_amount'];
+            $data['emi_amount'] = $extra['emi_amount'];
+        } elseif ($category->type === 'saving') {
+            $extra = $request->validate([
+                'monthly_amount' => 'required|numeric|min:0.01',
+                'target_amount' => 'nullable|numeric|min:0',
+            ]);
+            $data['monthly_amount'] = $extra['monthly_amount'];
+            $data['target_amount'] = $extra['target_amount'] ?? null;
+        }
 
-        $request->user()->budgets()->updateOrCreate(
-            ['category_id' => $category->id, 'month' => now()->month, 'year' => now()->year],
-            ['amount' => $data['budget_amount']]
-        );
+        $category->update($data);
 
         return back();
     }
