@@ -58,6 +58,20 @@ class DashboardController extends Controller
 
         $moneyNeeded = $totalBudget + $totalEMI + $totalSavingTarget;
 
+        $dailyExpenseMap = $user->transactions()
+            ->where('type', 'expense')
+            ->whereYear('transacted_at', $year)
+            ->whereMonth('transacted_at', $month)
+            ->selectRaw('DAY(transacted_at) as day, SUM(amount) as total')
+            ->groupBy('day')
+            ->pluck('total', 'day');
+
+        $daysInMonth = now()->daysInMonth;
+        $dailyExpense = [];
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $dailyExpense[] = (float) ($dailyExpenseMap[$d] ?? 0);
+        }
+
         $recent = $user->transactions()
             ->with('category')
             ->orderByDesc('created_at')
@@ -81,6 +95,7 @@ class DashboardController extends Controller
             'moneyNeeded' => $moneyNeeded,
             'monthLabel' => now()->format('F Y'),
             'recent' => $recent,
+            'dailyExpense' => $dailyExpense,
         ]);
     }
 }

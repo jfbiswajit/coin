@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
+import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js';
 import { ArrowRight, Landmark, PiggyBank, Wallet } from 'lucide-vue-next';
 import { onMounted, ref, computed } from 'vue';
+import { Bar } from 'vue-chartjs';
+
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip);
 
 type TxType = 'income' | 'expense' | 'loan' | 'saving';
 
@@ -15,7 +19,37 @@ const props = defineProps<{
     moneyNeeded: number;
     monthLabel: string;
     recent: Array<{ id: number; amount: number; type: TxType; title: string; transacted_at: string; category: { name: string; color: string } }>;
+    dailyExpense: number[];
 }>();
+
+const chartData = computed(() => ({
+    labels: props.dailyExpense.map((_, i) => String(i + 1)),
+    datasets: [{
+        label: 'Expense',
+        data: props.dailyExpense,
+        backgroundColor: '#7C3AED',
+        borderRadius: 4,
+        borderSkipped: false,
+    }],
+}));
+
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            callbacks: {
+                title: (items: any) => `Day ${items[0].label}`,
+                label: (ctx: any) => ` ৳${ctx.parsed.y.toLocaleString('en', { minimumFractionDigits: 2 })}`,
+            },
+        },
+    },
+    scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: (v: any) => `৳${v}` } },
+    },
+};
 
 const ready = ref(false);
 onMounted(() => requestAnimationFrame(() => { ready.value = true; }));
@@ -67,21 +101,32 @@ const formatDate = (dt: string) => {
         <div class="space-y-4">
 
 
-            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 p-6 sm:p-8">
-                <p class="text-[11px] font-semibold uppercase tracking-widest text-white/60 mb-2">Current Balance</p>
-                <p class="text-4xl sm:text-5xl font-black text-white tracking-tight">
-                    {{ balance < 0 ? '−' : '' }}{{ fmt(balance) }}
-                </p>
-                <span class="absolute bottom-4 right-4 bg-white/15 text-white text-xs font-medium px-3 py-1 rounded-full">
-                    {{ monthLabel }}
-                </span>
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-700 p-6 sm:p-8">
+                <!-- Decorative circles -->
+                <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/[0.07]" />
+                <div class="absolute -bottom-12 -left-8 w-32 h-32 rounded-full bg-white/[0.05]" />
+
+                <div class="relative">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-[11px] font-semibold uppercase tracking-widest text-white/60">Current Balance</p>
+                        <span class="bg-white/15 backdrop-blur-sm text-white text-[11px] font-medium px-3 py-1 rounded-full">
+                            {{ monthLabel }}
+                        </span>
+                    </div>
+                    <p class="text-4xl sm:text-5xl font-black text-white tracking-tight">
+                        {{ balance < 0 ? '−' : '' }}{{ fmt(balance) }}
+                    </p>
+                </div>
             </div>
 
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
                 <div class="card !p-5 border-l-[3px] border-l-violet-500">
-                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1.5"><Wallet class="w-3.5 h-3.5" />Money Needed</p>
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-1.5"><Wallet class="w-3.5 h-3.5" />Money Needed</p>
+                        <span class="text-[9px] font-medium text-gray-300 dark:text-gray-600 uppercase tracking-wider">This month</span>
+                    </div>
                     <p class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">{{ fmt(moneyNeeded) }}</p>
                     <p class="text-[11px] mt-1" :class="shortfall <= 0 ? 'text-emerald-500' : 'text-amber-500'">
                         <template v-if="shortfall <= 0">Fully covered</template>
@@ -90,7 +135,10 @@ const formatDate = (dt: string) => {
                 </div>
 
                 <div class="card !p-5 border-l-[3px] border-l-blue-500">
-                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1.5"><PiggyBank class="w-3.5 h-3.5" />Total Saved</p>
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-1.5"><PiggyBank class="w-3.5 h-3.5" />Total Saved</p>
+                        <span class="text-[9px] font-medium text-gray-300 dark:text-gray-600 uppercase tracking-wider">All time</span>
+                    </div>
                     <p class="text-2xl font-black tracking-tight text-blue-500">{{ fmt(totalSaved) }}</p>
                     <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
                         <template v-if="savingsLoanCoverage !== null">{{ savingsLoanCoverage }}% of loan covered</template>
@@ -99,7 +147,10 @@ const formatDate = (dt: string) => {
                 </div>
 
                 <div class="card !p-5 border-l-[3px] border-l-orange-500">
-                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1.5"><Landmark class="w-3.5 h-3.5" />Loan Outstanding</p>
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-1.5"><Landmark class="w-3.5 h-3.5" />Loan Outstanding</p>
+                        <span class="text-[9px] font-medium text-gray-300 dark:text-gray-600 uppercase tracking-wider">All time</span>
+                    </div>
                     <p class="text-2xl font-black tracking-tight text-orange-500">{{ fmt(loanOutstanding) }}</p>
                     <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
                         <template v-if="loanToBalanceRatio !== null">{{ loanToBalanceRatio }}x your balance</template>
@@ -180,6 +231,13 @@ const formatDate = (dt: string) => {
                         </div>
                     </div>
                     <p v-else class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">No transactions yet this month.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Daily Expenses · {{ monthLabel }}</p>
+                <div class="relative h-48 sm:h-64">
+                    <Bar :data="chartData" :options="chartOptions" />
                 </div>
             </div>
 
