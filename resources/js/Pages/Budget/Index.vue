@@ -176,7 +176,8 @@ const goToTransactions = (categoryId: number, type: string) => {
                         <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
                             <div
                                 class="h-full rounded-full transition-all duration-500"
-                                :style="{ width: ready ? `${itemPct(item)}%` : '0%', backgroundColor: isOver(item) ? '#ef4444' : item.color }"
+                                :class="isOver(item) ? 'bg-red-500' : itemPct(item) > 75 ? 'bg-amber-400' : 'bg-emerald-500'"
+                                :style="{ width: ready ? `${itemPct(item)}%` : '0%' }"
                             />
                         </div>
 
@@ -357,7 +358,8 @@ const goToTransactions = (categoryId: number, type: string) => {
                         <template v-if="item.target_amount">
                             <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
                                 <div
-                                    class="h-full rounded-full transition-all duration-500 bg-blue-500"
+                                    class="h-full rounded-full transition-all duration-500"
+                                    :class="savingPct(item) >= 75 ? 'bg-emerald-500' : savingPct(item) >= 40 ? 'bg-amber-400' : 'bg-blue-500'"
                                     :style="{ width: ready ? `${savingPct(item)}%` : '0%' }"
                                 />
                             </div>
@@ -365,7 +367,8 @@ const goToTransactions = (categoryId: number, type: string) => {
                                 <span class="text-xs text-gray-400 dark:text-gray-500">
                                     {{ fmt(item.total_saved) }} / {{ fmt(item.target_amount) }}
                                 </span>
-                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400">
+                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                                    :class="savingPct(item) >= 75 ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : savingPct(item) >= 40 ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-blue-100 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400'">
                                     {{ Math.round(savingPct(item)) }}%
                                 </span>
                             </div>
