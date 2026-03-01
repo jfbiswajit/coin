@@ -93,7 +93,7 @@ class TransactionController extends Controller
             'transacted_at' => $data['transacted_at'],
         ]);
 
-        return redirect()->route('transactions.index')->with('success', 'Transaction added.');
+        return back()->with('success', 'Transaction added.');
     }
 
     public function update(Request $request, Transaction $transaction)
