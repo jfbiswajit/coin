@@ -74,6 +74,8 @@ class DashboardController extends Controller
 
         $recent = $user->transactions()
             ->with('category')
+            ->whereYear('transacted_at', $year)
+            ->whereMonth('transacted_at', $month)
             ->orderByDesc('created_at')
             ->limit(5)
             ->get()
