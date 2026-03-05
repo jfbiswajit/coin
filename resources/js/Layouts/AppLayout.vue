@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { useColorMode } from '@vueuse/core';
 import {
     CircleDollarSign,
     LayoutDashboard,
     LogOut,
-    Moon,
     PiggyBank,
-    Sun,
     Tag,
 } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
@@ -18,11 +15,6 @@ onMounted(() => requestAnimationFrame(() => { ready.value = true; }));
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
-const mode = useColorMode();
-
-const toggleDark = () => {
-    mode.value = mode.value === 'dark' ? 'light' : 'dark';
-};
 
 const navItems = [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, name: 'dashboard', mobileHidden: false },
@@ -37,19 +29,19 @@ const isActive = (name: string) => page.component.toLowerCase().startsWith(name)
 </script>
 
 <template>
-    <div class="bg-app min-h-screen flex dark:bg-coin-dark-bg bg-[#f0edff]">
+    <div class="bg-app min-h-screen flex bg-coin-dark-bg">
 
         <aside class="hidden md:flex flex-col w-60 glass-panel fixed inset-y-0 left-0 z-30">
 
-            <div class="px-6 py-5 border-b border-white/40 dark:border-white/[0.06]">
+            <div class="px-6 py-5 border-b border-white/[0.06]">
                 <div class="flex items-center gap-3">
                     <div class="relative flex-shrink-0">
                         <div class="absolute inset-0 rounded-2xl bg-violet-500/40 blur-md"></div>
                         <img src="/favicon.svg" alt="Coin" class="w-9 h-9" />
                     </div>
                     <div class="flex flex-col leading-none">
-                        <span class="text-lg font-extrabold tracking-widest text-amber-500 dark:text-amber-400">COIN</span>
-                        <span class="text-[10px] font-medium text-gray-400 dark:text-gray-500 tracking-wider uppercase mt-0.5">Personal Finance</span>
+                        <span class="text-lg font-extrabold tracking-widest text-amber-400">COIN</span>
+                        <span class="text-[10px] font-medium text-gray-500 tracking-wider uppercase mt-0.5">Personal Finance</span>
                     </div>
                 </div>
             </div>
@@ -63,7 +55,7 @@ const isActive = (name: string) => page.component.toLowerCase().startsWith(name)
                     class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
                     :class="isActive(item.name)
                         ? 'bg-coin-primary/90 backdrop-blur-sm text-white shadow-md shadow-violet-500/25'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-white/[0.06] hover:text-gray-900 dark:hover:text-white'"
+                        : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'"
                 >
                     <component :is="item.icon" class="w-4.5 h-4.5 flex-shrink-0" />
                     {{ item.label }}
@@ -71,26 +63,18 @@ const isActive = (name: string) => page.component.toLowerCase().startsWith(name)
             </nav>
 
 
-            <div class="px-3 py-3 border-t border-white/40 dark:border-white/[0.06]">
+            <div class="px-3 py-3 border-t border-white/[0.06]">
                 <div class="flex items-center gap-2 px-2">
                     <div class="w-6 h-6 rounded-md bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
                         {{ user?.name?.[0]?.toUpperCase() ?? 'U' }}
                     </div>
-                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400 truncate flex-1">{{ user?.name }}</span>
-                    <button
-                        class="p-1.5 rounded-lg text-gray-400 hover:bg-white/60 dark:hover:bg-white/[0.08] hover:text-gray-700 dark:hover:text-gray-200 transition-all"
-                        :title="mode === 'dark' ? 'Light mode' : 'Dark mode'"
-                        @click="toggleDark"
-                    >
-                        <Sun v-if="mode === 'dark'" class="w-3.5 h-3.5" />
-                        <Moon v-else class="w-3.5 h-3.5" />
-                    </button>
+                    <span class="text-xs font-medium text-gray-400 truncate flex-1">{{ user?.name }}</span>
                     <Link
                         href="/logout"
                         method="post"
                         as="button"
                         title="Log out"
-                        class="p-1.5 rounded-lg text-gray-400 hover:bg-red-50/80 dark:hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 transition-all"
+                        class="p-1.5 rounded-lg text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-all"
                     >
                         <LogOut class="w-3.5 h-3.5" />
                     </Link>
@@ -101,20 +85,13 @@ const isActive = (name: string) => page.component.toLowerCase().startsWith(name)
 
         <div class="flex-1 md:ml-60 min-h-screen flex flex-col relative z-10">
 
-            <header class="md:hidden flex items-center justify-between px-4 pb-3 glass-panel sticky top-0 z-20" style="padding-top: max(env(safe-area-inset-top), 12px)">
+            <header class="md:hidden flex items-center px-4 pb-3 glass-panel sticky top-0 z-20" style="padding-top: max(env(safe-area-inset-top), 12px)">
                 <div class="flex items-center gap-2.5">
                     <div class="relative flex-shrink-0">
                         <img src="/favicon.svg" alt="Coin" class="w-8 h-8" />
                     </div>
-                    <span class="text-base font-extrabold tracking-widest text-amber-500 dark:text-amber-400">COIN</span>
+                    <span class="text-base font-extrabold tracking-widest text-amber-400">COIN</span>
                 </div>
-                <button
-                    class="p-2 rounded-xl text-gray-500 hover:bg-white/60 dark:hover:bg-white/10 backdrop-blur-sm transition-all"
-                    @click="toggleDark"
-                >
-                    <Sun v-if="mode === 'dark'" class="w-5 h-5" />
-                    <Moon v-else class="w-5 h-5" />
-                </button>
             </header>
 
 
@@ -136,7 +113,7 @@ const isActive = (name: string) => page.component.toLowerCase().startsWith(name)
                     class="flex items-center justify-center px-5 py-2 rounded-2xl transition-all duration-200"
                     :class="isActive(item.name)
                         ? 'text-coin-primary bg-coin-primary/10'
-                        : 'text-gray-400 dark:text-gray-500'"
+                        : 'text-gray-500'"
                 >
                     <component :is="item.icon" class="w-7 h-7" />
                 </Link>

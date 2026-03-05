@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { useColorMode } from '@vueuse/core';
-import { Moon, Sun, TrendingUp, Target, BarChart2, WifiOff } from 'lucide-vue-next';
-
-const mode = useColorMode();
+import { TrendingUp, Target, BarChart2, WifiOff } from 'lucide-vue-next';
 
 const features = [
     {
@@ -29,12 +26,12 @@ const features = [
 </script>
 
 <template>
-    <div class="min-h-screen flex bg-[#f0edff] dark:bg-coin-dark-bg relative overflow-hidden">
+    <div class="min-h-screen flex bg-coin-dark-bg relative overflow-hidden">
 
         <div class="absolute inset-0 pointer-events-none">
-            <div class="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-violet-400/20 dark:bg-violet-600/15 blur-3xl" />
-            <div class="absolute -bottom-32 right-0 w-[400px] h-[400px] rounded-full bg-purple-400/15 dark:bg-purple-600/10 blur-3xl" />
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full bg-indigo-300/10 dark:bg-indigo-600/8 blur-3xl" />
+            <div class="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-violet-600/15 blur-3xl" />
+            <div class="absolute -bottom-32 right-0 w-[400px] h-[400px] rounded-full bg-purple-600/10 blur-3xl" />
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full bg-indigo-600/8 blur-3xl" />
         </div>
 
 
@@ -104,21 +101,13 @@ const features = [
 
         <div class="flex-1 flex flex-col relative z-10">
 
-            <div class="flex items-center justify-between px-6 py-4">
-                <div class="flex items-center gap-2 lg:hidden">
+            <div class="flex items-center px-6 py-4 lg:hidden">
+                <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center shadow-md shadow-violet-500/30">
                         <span class="text-white font-bold text-sm">₵</span>
                     </div>
-                    <span class="font-bold text-gray-900 dark:text-white">Coin</span>
+                    <span class="font-bold text-white">Coin</span>
                 </div>
-                <div class="hidden lg:block" />
-                <button
-                    class="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-white/10 backdrop-blur-sm transition-all"
-                    @click="mode = mode === 'dark' ? 'light' : 'dark'"
-                >
-                    <Sun v-if="mode === 'dark'" class="w-5 h-5" />
-                    <Moon v-else class="w-5 h-5" />
-                </button>
             </div>
 
 
@@ -140,7 +129,7 @@ const features = [
 
 
             <div class="flex-1 flex items-center justify-center px-6 py-8">
-                <div class="w-full max-w-md bg-white/60 dark:bg-white/[0.04] backdrop-blur-2xl border border-white/80 dark:border-white/[0.08] rounded-3xl shadow-xl shadow-black/5 dark:shadow-black/30 p-8">
+                <div class="w-full max-w-md bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-xl shadow-black/30 p-8">
                     <slot />
                 </div>
             </div>
