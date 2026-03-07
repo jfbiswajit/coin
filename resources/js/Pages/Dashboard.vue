@@ -33,9 +33,20 @@ const chartData = computed(() => ({
     }],
 }));
 
+const handleBarClick = (_event: any, elements: any[]) => {
+    if (!elements.length) return;
+    const day = elements[0].index + 1;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    router.get('/transactions', { date: `${year}-${month}-${dayStr}`, type: 'expense' });
+};
+
 const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    onClick: handleBarClick,
     plugins: {
         legend: { display: false },
         tooltip: {
@@ -236,7 +247,7 @@ const formatDate = (dt: string) => {
 
             <div class="card">
                 <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Daily Expenses · {{ monthLabel }}</p>
-                <div class="relative h-48 sm:h-64">
+                <div class="relative h-48 sm:h-64" style="cursor: pointer;">
                     <Bar :data="chartData" :options="chartOptions" />
                 </div>
             </div>

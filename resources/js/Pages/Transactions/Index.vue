@@ -35,7 +35,7 @@ const props = defineProps<{
         last_page: number;
     };
     categories: Array<{ id: number; name: string; type: TxType; color: string }>;
-    filters: { month: number; year: number; type?: string; category_id?: string };
+    filters: { month: number; year: number; type?: string; category_id?: string; date?: string };
     typeCounts: { expense: number; income: number; saving: number; loan: number };
 }>();
 
@@ -65,6 +65,19 @@ const applyFilters = () => {
         ...(categoryId.value ? { category_id: categoryId.value } : {}),
     }, { preserveScroll: true, preserveState: true, replace: true });
 };
+
+const clearDateFilter = () => {
+    router.get('/transactions', {
+        month: props.filters.month,
+        year: props.filters.year,
+        type: activeTab.value,
+    }, { preserveScroll: true, preserveState: true, replace: true });
+};
+
+const formattedDateFilter = computed(() => {
+    if (!props.filters.date) return null;
+    return new Date(props.filters.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+});
 
 watch([monthYear, activeTab, categoryId], applyFilters);
 
@@ -257,6 +270,12 @@ const confirmDelete = () => {
                 placeholder="All categories"
             />
 
+            <div v-if="formattedDateFilter" class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-violet-500/15 text-violet-400 border border-violet-500/20">
+                    {{ formattedDateFilter }}
+                    <button type="button" class="hover:text-white transition-colors" @click="clearDateFilter">&times;</button>
+                </span>
+            </div>
 
             <div v-if="transactions.data.length" class="space-y-4">
                 <div v-for="[date, items] in groupedTransactions" :key="date" class="space-y-2">

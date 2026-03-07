@@ -12,12 +12,24 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $month = (int) $request->get('month', now()->month);
-        $year = (int) $request->get('year', now()->year);
+        $date = $request->get('date');
+
+        if ($date) {
+            $dateObj = \Carbon\Carbon::parse($date);
+            $month = $dateObj->month;
+            $year = $dateObj->year;
+        } else {
+            $month = (int) $request->get('month', now()->month);
+            $year = (int) $request->get('year', now()->year);
+        }
 
         $query = $user->transactions()->with('category')
             ->whereYear('transacted_at', $year)
             ->whereMonth('transacted_at', $month);
+
+        if ($date) {
+            $query->whereDate('transacted_at', $date);
+        }
 
         $type = $request->get('type', 'expense');
         $query->where('type', $type);
@@ -41,6 +53,10 @@ class TransactionController extends Controller
             ->whereYear('transacted_at', $year)
             ->whereMonth('transacted_at', $month);
 
+        if ($date) {
+            $baseQuery->whereDate('transacted_at', $date);
+        }
+
         $typeCounts = (clone $baseQuery)->selectRaw('type, count(*) as total')
             ->groupBy('type')
             ->pluck('total', 'type');
@@ -48,7 +64,7 @@ class TransactionController extends Controller
         return Inertia::render('Transactions/Index', [
             'transactions' => $transactions,
             'categories' => $categories,
-            'filters' => ['month' => $month, 'year' => $year, 'type' => $type, 'category_id' => $request->category_id],
+            'filters' => ['month' => $month, 'year' => $year, 'type' => $type, 'category_id' => $request->category_id, 'date' => $date],
             'typeCounts' => [
                 'expense' => $typeCounts->get('expense', 0),
                 'income' => $typeCounts->get('income', 0),
