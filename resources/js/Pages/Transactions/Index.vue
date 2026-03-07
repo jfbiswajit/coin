@@ -19,6 +19,7 @@ const generateUUID = (): string => {
 };
 import { queueOfflineTransaction, syncOfflineQueue } from '@/offline';
 import { useToast } from '@/composables/useToast';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 
 type TxType = 'expense' | 'income' | 'saving' | 'loan';
 
@@ -55,6 +56,13 @@ const shiftMonth = (delta: number) => {
 
 const activeTab = ref<TxType>((props.filters.type as TxType) ?? 'expense');
 const categoryId = ref(props.filters.category_id ?? '');
+
+useKeyboardShortcuts({
+    e: () => { activeTab.value = 'expense'; categoryId.value = ''; },
+    i: () => { activeTab.value = 'income'; categoryId.value = ''; },
+    s: () => { activeTab.value = 'saving'; categoryId.value = ''; },
+    l: () => { activeTab.value = 'loan'; categoryId.value = ''; },
+});
 
 const applyFilters = () => {
     const [year, month] = monthYear.value.split('-');

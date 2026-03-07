@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     CircleDollarSign,
     LayoutDashboard,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import Toast from '@/Components/Toast.vue';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 
 const ready = ref(false);
 onMounted(() => requestAnimationFrame(() => { ready.value = true; }));
@@ -26,6 +27,13 @@ const navItems = [
 const mobileNavItems = navItems.filter(item => !item.mobileHidden);
 
 const isActive = (name: string) => page.component.toLowerCase().startsWith(name);
+
+useKeyboardShortcuts({
+    d: () => router.visit('/dashboard'),
+    t: () => router.visit('/transactions'),
+    b: () => router.visit('/budget'),
+    c: () => router.visit('/categories'),
+});
 </script>
 
 <template>

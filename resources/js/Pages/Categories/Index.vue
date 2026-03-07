@@ -2,6 +2,7 @@
 import AppModal from '@/Components/AppModal.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import { Plus } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
@@ -17,6 +18,14 @@ type Category = {
 const props = defineProps<{ categories: Category[] }>();
 
 const activeTab = ref<CategoryType>('expense');
+
+useKeyboardShortcuts({
+    e: () => activeTab.value = 'expense',
+    i: () => activeTab.value = 'income',
+    s: () => activeTab.value = 'saving',
+    l: () => activeTab.value = 'loan',
+});
+
 const showAdd = ref(false);
 const editTarget = ref<Category | null>(null);
 const confirmingDelete = ref(false);

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import { ChevronLeft, ChevronRight, MoreVertical } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 
@@ -53,6 +54,13 @@ const setTab = (tab: Tab) => {
     params.set('tab', tab);
     window.history.replaceState(window.history.state, '', `?${params.toString()}`);
 };
+
+useKeyboardShortcuts({
+    e: () => setTab('expense'),
+    i: () => setTab('income'),
+    s: () => setTab('saving'),
+    l: () => setTab('loan'),
+});
 
 const prevMonth = () => {
     let m = props.month - 1, y = props.year;
