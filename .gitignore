@@ -1,5 +1,6 @@
 *.log
 .DS_Store
+NOTES.md
 .env
 .env.backup
 .env.production
