@@ -14,11 +14,6 @@
         <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
         <link rel="alternate icon" href="/favicon.ico?v=2">
 
-        <!-- PWA -->
-        <link rel="manifest" href="/manifest.json">
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png?v=3">
-        <link rel="apple-touch-icon" href="/icons/icon-192.png?v=3">
-
         <!-- Scripts -->
         @routes
         @vite(['resources/js/app.ts', "resources/js/Pages/{$page['component']}.vue"])

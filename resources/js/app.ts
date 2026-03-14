@@ -1,6 +1,5 @@
 import '../css/app.css';
 import './bootstrap';
-import './offline';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
@@ -26,9 +25,3 @@ createInertiaApp({
         color: '#7C3AED',
     },
 });
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js');
-    });
-}

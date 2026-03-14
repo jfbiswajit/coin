@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TrendingUp, Target, BarChart2, WifiOff } from 'lucide-vue-next';
+import { TrendingUp, Target, BarChart2 } from 'lucide-vue-next';
 
 const features = [
     {
@@ -16,11 +16,6 @@ const features = [
         icon: BarChart2,
         title: 'Visual reports',
         desc: 'Charts that show where your money actually goes',
-    },
-    {
-        icon: WifiOff,
-        title: 'Works offline',
-        desc: 'PWA — add to home screen, use anywhere',
     },
 ];
 </script>

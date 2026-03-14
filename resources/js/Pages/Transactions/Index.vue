@@ -5,7 +5,7 @@ import SearchableSelect from '@/Components/SearchableSelect.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-vue-next';
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed } from 'vue';
 
 const generateUUID = (): string => {
     if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -17,8 +17,6 @@ const generateUUID = (): string => {
         ([4, 6, 8, 10].includes(i) ? '-' : '') + b.toString(16).padStart(2, '0')
     ).join('');
 };
-import { queueOfflineTransaction, syncOfflineQueue } from '@/offline';
-import { useToast } from '@/composables/useToast';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 
 type TxType = 'expense' | 'income' | 'saving' | 'loan';
@@ -95,13 +93,6 @@ watch([monthYear, activeTab, categoryId, isCreditFilter], applyFilters);
 const showAdd = ref(false);
 const editTarget = ref<Transaction | null>(null);
 const confirmingDelete = ref(false);
-const isOffline = ref(!navigator.onLine);
-const { show: showToast } = useToast();
-
-onMounted(() => {
-    window.addEventListener('online', () => { isOffline.value = false; syncOfflineQueue(); });
-    window.addEventListener('offline', () => { isOffline.value = true; });
-});
 
 const todayDate = () => new Date().toISOString().slice(0, 10);
 
@@ -197,21 +188,7 @@ const openEdit = (t: Transaction) => {
     confirmingDelete.value = false;
 };
 
-const submit = async () => {
-    if (!navigator.onLine) {
-        await queueOfflineTransaction({
-            uuid: form.uuid,
-            category_id: Number(form.category_id),
-            amount: Number(form.amount),
-            type: form.type,
-            title: form.title,
-            transacted_at: form.transacted_at,
-        });
-        showAdd.value = false;
-        showToast('Saved offline');
-        return;
-    }
-
+const submit = () => {
     form.post('/transactions', {
         onSuccess: () => { showAdd.value = false; },
     });
@@ -435,7 +412,7 @@ const confirmDelete = () => {
                 </div>
 
                 <button type="submit" class="btn-primary w-full py-2.5" :disabled="form.processing">
-                    {{ form.processing ? 'Saving…' : isOffline ? 'Save Offline' : 'Save Transaction' }}
+                    {{ form.processing ? 'Saving…' : 'Save Transaction' }}
                 </button>
             </form>
         </AppModal>

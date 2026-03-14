@@ -2,10 +2,6 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import DatePicker from '@/Components/DatePicker.vue';
-import { WifiOff } from 'lucide-vue-next';
-import { onMounted, ref } from 'vue';
-import { queueOfflineTransaction, syncOfflineQueue } from '@/offline';
-import { useToast } from '@/composables/useToast';
 
 const generateUUID = (): string => {
     if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -22,17 +18,6 @@ const props = defineProps<{
     categories: Array<{ id: number; name: string; type: string; color: string; icon: string }>;
 }>();
 
-const isOffline = ref(!navigator.onLine);
-const { show: showToast } = useToast();
-
-onMounted(() => {
-    window.addEventListener('online', () => {
-        isOffline.value = false;
-        syncOfflineQueue();
-    });
-    window.addEventListener('offline', () => { isOffline.value = true; });
-});
-
 const form = useForm({
     uuid: generateUUID(),
     category_id: '',
@@ -42,21 +27,7 @@ const form = useForm({
     title: '',
 });
 
-const submit = async () => {
-    if (!navigator.onLine) {
-        await queueOfflineTransaction({
-            uuid: form.uuid,
-            category_id: Number(form.category_id),
-            amount: Number(form.amount),
-            type: form.type as 'income' | 'expense',
-            transacted_at: form.transacted_at,
-            title: form.title,
-        });
-        showToast('Saved offline');
-        router.visit('/transactions');
-        return;
-    }
-
+const submit = () => {
     form.post('/transactions', {
         onSuccess: () => router.visit('/transactions'),
     });
@@ -71,9 +42,6 @@ const submit = async () => {
                 <div>
                     <h1 class="text-xl font-bold text-gray-900 dark:text-white">Add Transaction</h1>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Record a new entry</p>
-                </div>
-                <div v-if="isOffline" class="flex items-center gap-1.5 text-amber-500 text-sm">
-                    <WifiOff class="w-4 h-4" /> Offline
                 </div>
             </div>
 
@@ -144,7 +112,7 @@ const submit = async () => {
                     class="btn-primary w-full py-3 text-base"
                     :disabled="form.processing"
                 >
-                    {{ form.processing ? 'Saving...' : isOffline ? 'Save Offline' : 'Save Transaction' }}
+                    {{ form.processing ? 'Saving...' : 'Save Transaction' }}
                 </button>
             </form>
         </div>
