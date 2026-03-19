@@ -48,7 +48,10 @@ const editForm = useForm({
 
 const listed = computed(() => props.categories.filter(c => c.type === activeTab.value));
 
-const presetColors = ['#BE185D', '#9333EA', '#7C3AED', '#4F46E5', '#0369A1', '#0E7490', '#0F766E', '#166534', '#92400E', '#6B21A8'];
+const presetColors = [
+    '#F43F5E', '#EC4899', '#D946EF', '#A855F7', '#7C3AED', '#6366F1', '#06B6D4', '#0D9488',
+    '#BE185D', '#9333EA', '#4F46E5', '#0891B2', '#0E7490', '#0F766E', '#F97316', '#64748B',
+];
 
 const fmt = (v: number) => '৳' + new Intl.NumberFormat('en', { minimumFractionDigits: 2 }).format(v);
 const randomColor = () => presetColors[Math.floor(Math.random() * presetColors.length)];
@@ -282,14 +285,14 @@ const cardSubtitle = (cat: Category) => {
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color</label>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="grid grid-cols-8 gap-2">
                         <button
                             v-for="c in presetColors"
                             :key="c"
                             type="button"
-                            class="w-9 h-9 rounded-lg transition-all"
+                            class="w-8 h-8 rounded-lg transition-all"
                             :style="{ backgroundColor: c }"
-                            :class="addForm.color === c ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-coin-dark-card ring-gray-600' : 'hover:scale-110'"
+                            :class="addForm.color === c ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-coin-dark-card ring-gray-500 scale-110' : 'hover:scale-110 opacity-80 hover:opacity-100'"
                             @click="addForm.color = c"
                         />
                     </div>
@@ -385,14 +388,14 @@ const cardSubtitle = (cat: Category) => {
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color</label>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="grid grid-cols-8 gap-2">
                         <button
                             v-for="c in presetColors"
                             :key="c"
                             type="button"
-                            class="w-9 h-9 rounded-lg transition-all"
+                            class="w-8 h-8 rounded-lg transition-all"
                             :style="{ backgroundColor: c }"
-                            :class="editForm.color === c ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-coin-dark-card ring-gray-600' : 'hover:scale-110'"
+                            :class="editForm.color === c ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-coin-dark-card ring-gray-500 scale-110' : 'hover:scale-110 opacity-80 hover:opacity-100'"
                             @click="editForm.color = c"
                         />
                     </div>
