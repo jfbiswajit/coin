@@ -1,5 +1,8 @@
 *.log
 .DS_Store
+.claude/
+.mcp.json
+boost.json
 NOTES.md
 .env
 .env.backup
