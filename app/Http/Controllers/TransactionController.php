@@ -42,7 +42,7 @@ class TransactionController extends Controller
             $query->where('is_credit', (bool) $request->is_credit);
         }
 
-        $transactions = $query->orderByDesc('transacted_at')->orderByDesc('id')->paginate(20)->withQueryString()->through(fn($t) => [
+        $transactions = $query->orderByDesc('transacted_at')->orderBy('id')->paginate(20)->withQueryString()->through(fn($t) => [
             'id' => $t->id,
             'amount' => (float) $t->amount,
             'type' => $t->type,
