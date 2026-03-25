@@ -18,8 +18,8 @@ const user = computed(() => page.props.auth.user);
 
 const navItems = [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, name: 'dashboard', mobileHidden: false },
-    { label: 'Transactions', href: '/transactions', icon: CircleDollarSign, name: 'transactions', mobileHidden: false },
     { label: 'Budget', href: '/budget', icon: PiggyBank, name: 'budget', mobileHidden: false },
+    { label: 'Transactions', href: '/transactions', icon: CircleDollarSign, name: 'transactions', mobileHidden: false },
 ];
 
 const mobileNavItems = navItems.filter(item => !item.mobileHidden);
