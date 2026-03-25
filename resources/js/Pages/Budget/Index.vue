@@ -39,7 +39,7 @@ const props = defineProps<{
 
 const ready = ref(false);
 onMounted(() => {
-    requestAnimationFrame(() => { ready.value = true; });
+    setTimeout(() => { ready.value = true; }, 50);
     document.addEventListener('click', () => { openMenu.value = null; });
 });
 
