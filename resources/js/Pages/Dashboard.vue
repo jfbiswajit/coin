@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js';
 import { ArrowRight, Landmark, PiggyBank, Wallet } from 'lucide-vue-next';
 import { onMounted, ref, computed } from 'vue';
@@ -143,7 +143,7 @@ const formatDate = (dt: string) => {
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
-                <div class="card !p-5 border-l-[3px] border-l-violet-500">
+                <Link href="/budget" class="card !p-5 border-l-[3px] border-l-violet-500 block hover:opacity-80 transition-opacity">
                     <div class="flex items-center justify-between mb-1">
                         <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-1.5"><Wallet class="w-3.5 h-3.5" />Money Needed</p>
                         <span class="text-[9px] font-medium text-gray-300 dark:text-gray-600 uppercase tracking-wider">This month</span>
@@ -153,9 +153,9 @@ const formatDate = (dt: string) => {
                         <template v-if="shortfall <= 0">Fully covered</template>
                         <template v-else>{{ fmt(shortfall) }} shortfall</template>
                     </p>
-                </div>
+                </Link>
 
-                <div class="card !p-5 border-l-[3px] border-l-blue-500">
+                <Link href="/budget?tab=saving" class="card !p-5 border-l-[3px] border-l-blue-500 block hover:opacity-80 transition-opacity">
                     <div class="flex items-center justify-between mb-1">
                         <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-1.5"><PiggyBank class="w-3.5 h-3.5" />Total Saved</p>
                         <span class="text-[9px] font-medium text-gray-300 dark:text-gray-600 uppercase tracking-wider">All time</span>
@@ -165,9 +165,9 @@ const formatDate = (dt: string) => {
                         <template v-if="savingsLoanCoverage !== null">{{ savingsLoanCoverage }}% of loan covered</template>
                         <template v-else>Keep saving!</template>
                     </p>
-                </div>
+                </Link>
 
-                <div class="card !p-5 border-l-[3px] border-l-orange-500">
+                <Link href="/budget?tab=loan" class="card !p-5 border-l-[3px] border-l-orange-500 block hover:opacity-80 transition-opacity">
                     <div class="flex items-center justify-between mb-1">
                         <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-1.5"><Landmark class="w-3.5 h-3.5" />Loan Outstanding</p>
                         <span class="text-[9px] font-medium text-gray-300 dark:text-gray-600 uppercase tracking-wider">All time</span>
@@ -177,7 +177,7 @@ const formatDate = (dt: string) => {
                         <template v-if="loanToBalanceRatio !== null">{{ loanToBalanceRatio }}x your balance</template>
                         <template v-else>No loans</template>
                     </p>
-                </div>
+                </Link>
             </div>
 
 
@@ -185,7 +185,10 @@ const formatDate = (dt: string) => {
 
 
                 <div class="card space-y-5 lg:col-span-3">
-                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Income vs Expense</p>
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Income vs Expense</p>
+                        <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ monthLabel }}</p>
+                    </div>
 
                     <div class="grid grid-cols-3 gap-4">
                         <div class="space-y-1">
@@ -259,7 +262,10 @@ const formatDate = (dt: string) => {
             </div>
 
             <div class="card">
-                <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Daily Expenses</p>
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Daily Expenses</p>
+                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ monthLabel }}</p>
+                </div>
                 <div class="relative h-48 sm:h-64" style="cursor: pointer;">
                     <Bar :data="chartData" :options="chartOptions" />
                 </div>
