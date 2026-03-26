@@ -6,12 +6,16 @@ import {
     LogOut,
     PiggyBank,
 } from 'lucide-vue-next';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import Toast from '@/Components/Toast.vue';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 
 const ready = ref(false);
 onMounted(() => requestAnimationFrame(() => { ready.value = true; }));
+
+const offStart = router.on('start', () => { ready.value = false; });
+const offFinish = router.on('finish', () => requestAnimationFrame(() => { ready.value = true; }));
+onUnmounted(() => { offStart(); offFinish(); });
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);

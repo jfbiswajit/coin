@@ -145,12 +145,14 @@ const amountColor = (type: TxType) => {
 
 const amountPrefix = (type: TxType) => type === 'income' ? '+' : '-';
 
-const tabConfig: Record<TxType, { label: string }> = {
-    expense: { label: 'Expense' },
-    income: { label: 'Income' },
-    saving: { label: 'Saving' },
-    loan: { label: 'Loan' },
+const tabConfig: Record<TxType, { label: string; title: string; subtitle: string }> = {
+    expense: { label: 'Expense', title: 'Expenses', subtitle: 'Your spending records' },
+    income: { label: 'Income', title: 'Income', subtitle: 'Your earnings this month' },
+    saving: { label: 'Saving', title: 'Savings', subtitle: 'Your saving records' },
+    loan: { label: 'Loan', title: 'Loans', subtitle: 'Your loan records' },
 };
+
+const pageHeader = computed(() => tabConfig[activeTab.value]);
 
 const openAdd = () => {
     form.uuid = generateUUID();
@@ -201,8 +203,8 @@ const confirmDelete = () => {
         <div class="space-y-5">
 
             <div>
-                <h1 class="text-xl font-bold text-gray-900 dark:text-white">Transactions</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Your income & expenses</p>
+                <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ pageHeader.title }}</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ pageHeader.subtitle }}</p>
             </div>
 
 

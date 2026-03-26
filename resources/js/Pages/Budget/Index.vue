@@ -62,6 +62,15 @@ useKeyboardShortcuts({
     l: () => setTab('loan'),
 });
 
+const tabMeta: Record<Tab, { title: string; subtitle: string }> = {
+    expense: { title: 'Budget', subtitle: 'Track your spending goals' },
+    income: { title: 'Income', subtitle: 'Your monthly income targets' },
+    saving: { title: 'Savings', subtitle: 'Your saving goals' },
+    loan: { title: 'Loans', subtitle: 'Your loan & EMI tracker' },
+};
+
+const pageHeader = computed(() => tabMeta[activeSection.value]);
+
 const fmt = (v: number) => `৳${new Intl.NumberFormat('en', { minimumFractionDigits: 2 }).format(v)}`;
 
 const itemPct = (item: ExpenseItem) =>
@@ -170,8 +179,8 @@ const openEditFromBudget = (item: ExpenseItem | IncomeItem | LoanItem | SavingIt
 
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Budget</h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Track your spending goals</p>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ pageHeader.title }}</h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ pageHeader.subtitle }}</p>
                 </div>
                 <div class="flex items-center gap-2">
                 <button class="btn-primary text-sm flex items-center gap-1.5" @click="showCreateModal = true">
