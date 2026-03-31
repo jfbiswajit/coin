@@ -26,6 +26,8 @@ class DashboardController extends Controller
         $totalCreditExpense = (float) $user->transactions()
             ->where('type', 'expense')
             ->where('is_credit', true)
+            ->whereMonth('transacted_at', $month)
+            ->whereYear('transacted_at', $year)
             ->sum('amount');
 
         $cashInHand = $balance + $totalCreditExpense;

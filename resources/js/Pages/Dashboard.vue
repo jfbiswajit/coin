@@ -128,12 +128,9 @@ const formatDate = (dt: string) => {
                         {{ balance < 0 ? '−' : '' }}{{ fmt(balance) }}
                     </p>
                     <div v-if="totalCreditExpense > 0"
-                         class="mt-4 inline-flex items-center gap-3 px-4 py-2.5 rounded-full bg-black/30 backdrop-blur-md border border-white/10 cursor-pointer hover:bg-black/40 transition-all shadow-lg"
+                         class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/10 cursor-pointer hover:bg-black/40 transition-all shadow-lg"
                          @click="router.get('/transactions', { type: 'expense', is_credit: 1 })">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_2px_rgba(52,211,153,0.5)]" />
-                            <span class="text-xs font-semibold uppercase tracking-wider text-white/50">Cash in Hand</span>
-                        </div>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-white/50">Cash in Hand</span>
                         <span class="text-sm font-bold text-white">{{ cashInHand < 0 ? '−' : '' }}{{ fmt(cashInHand) }}</span>
                         <span class="text-[10px] text-amber-400/90">{{ fmt(totalCreditExpense) }} on credit →</span>
                     </div>
