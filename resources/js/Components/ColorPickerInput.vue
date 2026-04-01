@@ -114,16 +114,16 @@ const hueThumbStyle = computed(() => ({ left: `${(hue.value / 360) * 100}%`, bac
 
         <!-- Popover -->
         <Transition
-            enter-active-class="transition-all duration-200 ease-out origin-top"
-            enter-from-class="opacity-0 scale-y-95"
-            enter-to-class="opacity-100 scale-y-100"
-            leave-active-class="transition-all duration-150 ease-in origin-top"
-            leave-from-class="opacity-100 scale-y-100"
-            leave-to-class="opacity-0 scale-y-95"
+            enter-active-class="transition-all duration-200 ease-out origin-bottom"
+            enter-from-class="opacity-0 scale-95 translate-y-2"
+            enter-to-class="opacity-100 scale-100 translate-y-0"
+            leave-active-class="transition-all duration-150 ease-in origin-bottom"
+            leave-from-class="opacity-100 scale-100 translate-y-0"
+            leave-to-class="opacity-0 scale-95 translate-y-2"
         >
             <div
                 v-if="open"
-                class="absolute z-50 mt-2 left-0 right-0 rounded-2xl border border-white/10 bg-[#13131f] shadow-2xl p-4 space-y-3"
+                class="absolute z-50 bottom-full mb-2 left-0 right-0 rounded-2xl border border-white/10 bg-[#13131f] shadow-2xl p-4 space-y-3"
             >
                 <!-- Saturation / Value area -->
                 <div
