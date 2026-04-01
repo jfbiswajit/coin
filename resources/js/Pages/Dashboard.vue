@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js';
+import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip, Legend } from 'chart.js';
 import { ArrowRight, Landmark, PiggyBank, Wallet } from 'lucide-vue-next';
 import { onMounted, ref, computed } from 'vue';
-import { Bar } from 'vue-chartjs';
+import { Bar, Doughnut } from 'vue-chartjs';
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip);
+ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 type TxType = 'income' | 'expense' | 'loan' | 'saving';
 
@@ -22,7 +22,32 @@ const props = defineProps<{
     monthLabel: string;
     recent: Array<{ id: number; amount: number; type: TxType; title: string; transacted_at: string; category: { name: string; color: string } }>;
     dailyExpense: number[];
+    spendingByCategory: Array<{ name: string; color: string; total: number }>;
 }>();
+
+const donutData = computed(() => ({
+    labels: props.spendingByCategory.map(c => c.name),
+    datasets: [{
+        data: props.spendingByCategory.map(c => c.total),
+        backgroundColor: props.spendingByCategory.map(c => c.color),
+        borderWidth: 0,
+        hoverOffset: 6,
+    }],
+}));
+
+const donutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '70%',
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            callbacks: {
+                label: (ctx: any) => ` ${ctx.label}: ৳${Number(ctx.raw).toLocaleString('en', { minimumFractionDigits: 2 })}`,
+            },
+        },
+    },
+};
 
 const chartData = computed(() => ({
     labels: props.dailyExpense.map((_, i) => String(i + 1)),
@@ -112,6 +137,44 @@ const formatDate = (dt: string) => {
         <div class="space-y-4">
 
 
+            <!-- Net Balance full width -->
+                <div class="card !p-0 overflow-hidden">
+                    <!-- Balance section -->
+                    <div class="p-5 pb-4">
+                        <div class="flex items-start justify-between">
+                            <div class="space-y-0.5">
+                                <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Net Balance</p>
+                                <p class="text-3xl font-black tracking-tight" :class="balance >= 0 ? 'text-gray-900 dark:text-white' : 'text-red-500'">
+                                    {{ balance < 0 ? '−' : '' }}{{ fmt(balance) }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Cash in hand pill -->
+                        <div v-if="totalCreditExpense > 0"
+                             class="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors"
+                             @click="router.get('/transactions', { type: 'expense', is_credit: 1 })">
+                            <span class="text-[9px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Cash in Hand</span>
+                            <span class="text-xs font-bold text-gray-900 dark:text-white">{{ cashInHand < 0 ? '−' : '' }}{{ fmt(cashInHand) }}</span>
+                            <span class="text-[9px] text-amber-500 dark:text-amber-400">{{ fmt(totalCreditExpense) }} on credit →</span>
+                        </div>
+
+                        <!-- Balance bar: balance vs this month's expenses -->
+                        <div class="mt-4 space-y-1.5">
+                            <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden flex gap-0.5">
+                                <div class="h-full rounded-full bg-emerald-500 transition-all duration-700 ease-out"
+                                    :style="{ width: ready ? `${Math.min(100, (balance / (balance + spentThisMonth)) * 100)}%` : '0%' }" />
+                                <div class="h-full rounded-full bg-red-400 transition-all duration-700 ease-out"
+                                    :style="{ width: ready ? `${Math.min(100, (spentThisMonth / (balance + spentThisMonth)) * 100)}%` : '0%' }" />
+                            </div>
+                            <div class="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500">
+                                <span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>Balance {{ fmt(balance) }}</span>
+                                <span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>Spent {{ fmt(spentThisMonth) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
                 <Link href="/budget" class="card !p-5 border-l-[3px] border-l-violet-500 block hover:opacity-80 transition-opacity">
@@ -152,92 +215,36 @@ const formatDate = (dt: string) => {
             </div>
 
 
-            <div class="grid lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-
-                <div class="card !p-0 lg:col-span-3 overflow-hidden">
-                    <!-- Balance section -->
-                    <div class="p-5 pb-4">
-                        <div class="flex items-start justify-between">
-                            <div class="space-y-0.5">
-                                <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Net Balance</p>
-                                <p class="text-3xl font-black tracking-tight" :class="balance >= 0 ? 'text-gray-900 dark:text-white' : 'text-red-500'">
-                                    {{ balance < 0 ? '−' : '' }}{{ fmt(balance) }}
-                                </p>
-                            </div>
+                <!-- Spending by Category -->
+                <div class="card">
+                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Spending by Category</p>
+                    <div v-if="spendingByCategory.length" class="flex gap-6 items-center">
+                        <div class="relative shrink-0 w-32 h-32">
+                            <Doughnut :data="donutData" :options="donutOptions" />
                         </div>
-
-                        <!-- Cash in hand pill -->
-                        <div v-if="totalCreditExpense > 0"
-                             class="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors"
-                             @click="router.get('/transactions', { type: 'expense', is_credit: 1 })">
-                            <span class="text-[9px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Cash in Hand</span>
-                            <span class="text-xs font-bold text-gray-900 dark:text-white">{{ cashInHand < 0 ? '−' : '' }}{{ fmt(cashInHand) }}</span>
-                            <span class="text-[9px] text-amber-500 dark:text-amber-400">{{ fmt(totalCreditExpense) }} on credit →</span>
-                        </div>
-
-                        <!-- Balance bar: balance vs this month's expenses -->
-                        <div class="mt-4 space-y-1.5">
-                            <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden flex gap-0.5">
-                                <div class="h-full rounded-full bg-emerald-500 transition-all duration-700 ease-out"
-                                    :style="{ width: ready ? `${Math.min(100, (balance / (balance + spentThisMonth)) * 100)}%` : '0%' }" />
-                                <div class="h-full rounded-full bg-red-400 transition-all duration-700 ease-out"
-                                    :style="{ width: ready ? `${Math.min(100, (spentThisMonth / (balance + spentThisMonth)) * 100)}%` : '0%' }" />
-                            </div>
-                            <div class="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500">
-                                <span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>Balance {{ fmt(balance) }}</span>
-                                <span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>Spent {{ fmt(spentThisMonth) }}</span>
-                            </div>
-                        </div>
+                        <ul class="flex-1 space-y-2 min-w-0">
+                            <li v-for="c in spendingByCategory" :key="c.name" class="flex items-center justify-between gap-2 min-w-0">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="inline-block w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: c.color }" />
+                                    <span class="text-xs text-gray-700 dark:text-gray-300 truncate">{{ c.name }}</span>
+                                </div>
+                                <span class="text-xs font-semibold text-gray-900 dark:text-white shrink-0">{{ fmt(c.total) }}</span>
+                            </li>
+                        </ul>
                     </div>
-
-                    <!-- Divider with month label -->
-                    <div class="flex items-center gap-3 px-5">
-                        <div class="h-px flex-1 bg-gray-100 dark:bg-white/10" />
-                        <span class="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ monthLabel }}</span>
-                        <div class="h-px flex-1 bg-gray-100 dark:bg-white/10" />
-                    </div>
-
-                    <!-- This month section -->
-                    <div class="p-5 pt-4 space-y-4">
-                        <div class="grid grid-cols-3 gap-3">
-                            <div class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 p-3 space-y-0.5">
-                                <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Income</p>
-                                <p class="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 truncate">{{ fmt(incomeThisMonth) }}</p>
-                            </div>
-                            <div class="rounded-xl p-3 space-y-0.5"
-                                :class="spentPct <= 60 ? 'bg-emerald-50 dark:bg-emerald-500/10' : spentPct <= 85 ? 'bg-amber-50 dark:bg-amber-500/10' : 'bg-red-50 dark:bg-red-500/10'">
-                                <p class="text-[10px] font-semibold uppercase tracking-wider truncate"
-                                    :class="spentPct <= 60 ? 'text-emerald-600 dark:text-emerald-400' : spentPct <= 85 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500'">Expense</p>
-                                <p class="text-base sm:text-lg font-black truncate"
-                                    :class="spentPct <= 60 ? 'text-emerald-600 dark:text-emerald-400' : spentPct <= 85 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500'">
-                                    {{ fmt(spentThisMonth) }}
-                                </p>
-                            </div>
-                            <div class="rounded-xl p-3 space-y-0.5"
-                                :class="inHand >= 0 ? 'bg-gray-50 dark:bg-white/5' : 'bg-red-50 dark:bg-red-500/10'">
-                                <p class="text-[10px] font-semibold uppercase tracking-wider"
-                                    :class="inHand >= 0 ? 'text-gray-400 dark:text-gray-500' : 'text-red-500'">
-                                    {{ inHand >= 0 ? 'Saved' : 'Over' }}
-                                </p>
-                                <p class="text-base sm:text-lg font-black truncate" :class="inHand >= 0 ? 'text-gray-700 dark:text-gray-200' : 'text-red-500'">
-                                    {{ inHand < 0 ? '−' : '' }}{{ fmt(Math.abs(inHand)) }}
-                                </p>
-                            </div>
-                        </div>
-
-                    </div>
+                    <p v-else class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">No expenses this month.</p>
                 </div>
 
-
-                <div class="card lg:col-span-2">
+                <!-- Recent -->
+                <div class="card">
                     <div class="flex items-center justify-between mb-4">
-                        <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Recent</p>
+                        <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Recent Transactions</p>
                         <button class="text-xs text-coin-primary flex items-center gap-1 hover:underline" @click="router.get('/transactions')">
                             View all <ArrowRight class="w-3 h-3" />
                         </button>
                     </div>
-
                     <div v-if="recent.length" class="space-y-3">
                         <div v-for="t in recent" :key="t.id" class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
@@ -257,6 +264,7 @@ const formatDate = (dt: string) => {
                     </div>
                     <p v-else class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">No transactions yet this month.</p>
                 </div>
+
             </div>
 
             <div class="card">

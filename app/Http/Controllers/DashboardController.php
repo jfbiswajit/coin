@@ -98,6 +98,22 @@ class DashboardController extends Controller
                 'category' => ['name' => $t->category->name, 'color' => $t->category->color],
             ]);
 
+        $spendingByCategory = $user->transactions()
+            ->with('category')
+            ->where('type', 'expense')
+            ->whereYear('transacted_at', $year)
+            ->whereMonth('transacted_at', $month)
+            ->selectRaw('category_id, SUM(amount) as total')
+            ->groupBy('category_id')
+            ->get()
+            ->map(fn ($t) => [
+                'name' => $t->category->name,
+                'color' => $t->category->color,
+                'total' => (float) $t->total,
+            ])
+            ->sortByDesc('total')
+            ->values();
+
         return Inertia::render('Dashboard', [
             'balance' => $balance,
             'cashInHand' => $cashInHand,
@@ -110,6 +126,7 @@ class DashboardController extends Controller
             'monthLabel' => now()->format('F Y'),
             'recent' => $recent,
             'dailyExpense' => $dailyExpense,
+            'spendingByCategory' => $spendingByCategory,
         ]);
     }
 }
