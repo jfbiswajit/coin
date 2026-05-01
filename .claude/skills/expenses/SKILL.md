@@ -34,18 +34,10 @@ Rules:
 
 ### Image path
 
-The user may provide an image file path (e.g. `/Users/.../IMG_1234.HEIC`) or attach a photo directly.
-
-**If an image file path is given**, first convert it to a readable JPEG before analyzing:
-```bash
-sips -s format jpeg -s formatOptions 20 -z 1200 1200 /path/to/image --out /tmp/expense_invoice.jpg
-```
-Then read `/tmp/expense_invoice.jpg` visually.
-
-Analyze the image and extract:
-- Every line item with its amount (use the **total** column per line, not unit price)
+Analyze the image visually and extract:
+- Every line item with its amount
 - The transaction date (from the invoice date, if present; otherwise today)
-- The invoice **net payable** (the final amount actually paid, after all discounts, loyalty deductions, and rounding) → save as `invoice_total`
+- The invoice grand total (the final total printed on the invoice, if present) → save as `invoice_total`
 
 Apply the same title refinement rules as the text path.
 
@@ -77,20 +69,7 @@ Display a markdown table:
 **If `invoice_total` is not null**, add a verification row immediately after the table:
 
 - If `invoice_total` == sum of all amounts: ✓ Invoice total matches (600)
-- If they differ: ⚠ Invoice total is X but extracted items sum to Y — automatically apply proportional discount (see below)
-
-### Auto proportional adjustment
-
-When the sum of extracted item amounts does not match `invoice_total` (due to discounts, loyalty points, rounding, etc.):
-
-1. Compute `scale = invoice_total / sum_of_items`
-2. Multiply **every** item's amount by `scale`, rounded to 2 decimal places
-3. Compute `diff = invoice_total − sum(all scaled amounts)` — apply `diff` to the last item so the total is exact (diff may be more than ±0.01 due to accumulated rounding)
-4. **Verify**: sum all scaled amounts and assert they equal `invoice_total` exactly — do not show the table until this check passes
-5. Show the updated table with the scaled amounts
-6. Add a note: _"Amounts proportionally adjusted to match net payable of X (scale: Y)"_
-
-**HARD RULE — image invoices:** Never run the insert command until the sum of all amounts in the table equals `invoice_total` exactly. This check must pass every time, no exceptions. If the check fails after adjustment, do not ask "y/n" — fix the amounts first.
+- If they differ: ⚠ Invoice total is X but extracted items sum to Y — please review before confirming
 
 Then ask: **"Insert these transactions? (y/n)"**
 
@@ -133,15 +112,4 @@ echo 'Inserted ' . count(\$transactions) . ' transactions';
 "
 ```
 
-After inserting, run a verification query to confirm the DB sum matches `invoice_total`:
-
-```sql
-SELECT SUM(amount) as total, COUNT(*) as count
-FROM transactions
-WHERE user_id = 1 AND type = 'expense' AND DATE(transacted_at) = 'YYYY-MM-DD'
-ORDER BY id DESC
-LIMIT N
-```
-
-- If `total == invoice_total`: ✓ report count inserted and confirmed total
-- If they differ: ⚠ report the mismatch and identify which row caused the discrepancy
+Confirm with the count of inserted transactions.
