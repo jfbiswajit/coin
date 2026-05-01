@@ -36,6 +36,7 @@ const props = defineProps<{
     categories: Array<{ id: number; name: string; type: TxType; color: string }>;
     filters: { month: number; year: number; type?: string; category_id?: string; date?: string; search?: string };
     typeCounts: { expense: number; income: number; saving: number; loan: number };
+    dayTotals: Record<string, number>;
 }>();
 
 const activeTab = ref<TxType>((props.filters.type as TxType) ?? 'expense');
@@ -274,7 +275,7 @@ const confirmDelete = () => {
                         </span>
                         <div class="flex-1 h-px bg-gray-200 dark:bg-white/5"></div>
                         <span class="text-[11px] font-bold tracking-widest uppercase text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                            {{ fmt(items.reduce((s, t) => s + t.amount, 0)) }}
+                            {{ fmt(props.dayTotals[date] ?? items.reduce((s, t) => s + t.amount, 0)) }}
                         </span>
                     </div>
                     <div class="space-y-2">

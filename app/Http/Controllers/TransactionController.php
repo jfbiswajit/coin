@@ -66,6 +66,13 @@ class TransactionController extends Controller
             ->groupBy('type')
             ->pluck('total', 'type');
 
+        $dayTotals = (clone $baseQuery)
+            ->where('type', $type)
+            ->selectRaw('DATE(transacted_at) as date, SUM(amount) as total')
+            ->groupBy('date')
+            ->pluck('total', 'date')
+            ->map(fn ($t) => (float) $t);
+
         return Inertia::render('Transactions/Index', [
             'transactions' => $transactions,
             'categories' => $categories,
@@ -76,6 +83,7 @@ class TransactionController extends Controller
                 'saving' => $typeCounts->get('saving', 0),
                 'loan' => $typeCounts->get('loan', 0),
             ],
+            'dayTotals' => $dayTotals,
         ]);
     }
 
