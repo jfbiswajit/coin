@@ -15,15 +15,15 @@ npm run build          # vue-tsc type-check + vite build
 composer test          # clears config cache, then runs PHPUnit
 
 # Single test
-/opt/homebrew/opt/php@8.4/bin/php artisan test --filter TestClassName
-/opt/homebrew/opt/php@8.4/bin/php artisan test tests/Feature/SomeTest.php
+php artisan test --filter TestClassName
+php artisan test tests/Feature/SomeTest.php
 
 # Code format
 ./vendor/bin/pint
 
 # Database
-/opt/homebrew/opt/php@8.4/bin/php artisan migrate
-/opt/homebrew/opt/php@8.4/bin/php artisan db:seed
+php artisan migrate
+php artisan db:seed
 ```
 
 > Always use `/opt/homebrew/opt/php@8.4/bin/php artisan` instead of `php artisan` for all Artisan commands.
