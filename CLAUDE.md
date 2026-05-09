@@ -26,8 +26,6 @@ php artisan migrate
 php artisan db:seed
 ```
 
-> Always use `/opt/homebrew/opt/php@8.4/bin/php artisan` instead of `php artisan` for all Artisan commands.
-
 > `npm install` requires `--legacy-peer-deps` (@vitejs/plugin-vue 5.x vs Vite 7).
 
 ## Architecture
