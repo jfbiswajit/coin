@@ -82,6 +82,12 @@ const totalBudget = computed(() => props.expenses.reduce((s, b) => s + (b.budget
 const totalSpent = computed(() => props.expenses.reduce((s, b) => s + b.spent, 0));
 const remaining = computed(() => totalBudget.value - totalSpent.value);
 
+const spentPct = computed(() => totalBudget.value > 0 ? (totalSpent.value / totalBudget.value) * 100 : 0);
+const spentColor = computed(() => spentPct.value > 85 ? 'text-red-500' : spentPct.value > 50 ? 'text-amber-400' : 'text-emerald-500');
+
+const remainingPct = computed(() => totalBudget.value > 0 ? (remaining.value / totalBudget.value) * 100 : 0);
+const remainingColor = computed(() => remainingPct.value < 15 ? 'text-red-500' : remainingPct.value < 50 ? 'text-amber-400' : 'text-emerald-500');
+
 const loanPct = (item: LoanItem) =>
     item.loan_amount > 0 ? Math.min(100, (item.total_paid / item.loan_amount) * 100) : 0;
 
@@ -248,15 +254,15 @@ const openEditFromBudget = (item: ExpenseItem | IncomeItem | LoanItem | SavingIt
                     <div class="grid grid-cols-3 gap-2 sm:gap-4 text-center">
                         <div>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Budget</p>
-                            <p class="text-sm sm:text-lg font-bold text-gray-900 dark:text-white truncate">{{ fmt(totalBudget) }}</p>
+                            <p class="text-sm sm:text-lg font-bold text-coin-primary truncate">{{ fmt(totalBudget) }}</p>
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Spent</p>
-                            <p class="text-sm sm:text-lg font-bold text-red-500 truncate">{{ fmt(totalSpent) }}</p>
+                            <p class="text-sm sm:text-lg font-bold truncate" :class="spentColor">{{ fmt(totalSpent) }}</p>
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Remaining</p>
-                            <p class="text-sm sm:text-lg font-bold truncate" :class="remaining < 0 ? 'text-red-500' : 'text-emerald-500'">{{ fmt(remaining) }}</p>
+                            <p class="text-sm sm:text-lg font-bold truncate" :class="remainingColor">{{ fmt(remaining) }}</p>
                         </div>
                     </div>
                 </div>
