@@ -206,16 +206,12 @@ const confirmDelete = () => {
     <AppLayout>
         <div class="space-y-5">
 
-            <div class="flex items-center justify-between gap-3">
-                <div>
-                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ pageHeader.title }}</h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ pageHeader.subtitle }}</p>
-                </div>
-                <button class="btn-primary text-sm flex items-center gap-1.5 flex-shrink-0" @click="openAdd">
-                    <Plus class="w-4 h-4" /> <span class="hidden sm:inline">New Transaction</span><span class="sm:hidden">Add</span>
-                </button>
+            <div>
+                <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ pageHeader.title }}</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ pageHeader.subtitle }}</p>
             </div>
 
+            <div class="flex items-center gap-3">
             <div class="inline-flex gap-1 p-1 bg-gray-100 dark:bg-white/5 rounded-xl overflow-x-auto">
                 <button
                     v-for="(cfg, tab) in tabConfig"
@@ -231,6 +227,10 @@ const confirmDelete = () => {
                         :class="activeTab === tab ? 'bg-coin-primary/10 text-coin-primary' : 'bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-gray-400'"
                     >{{ typeCounts[tab as TxType] }}</span>
                 </button>
+            </div>
+            <button class="btn-primary text-sm flex items-center gap-1.5 shrink-0" @click="openAdd">
+                <Plus class="w-4 h-4" /> <span class="hidden sm:inline">New Transaction</span><span class="sm:hidden">Add</span>
+            </button>
             </div>
 
 

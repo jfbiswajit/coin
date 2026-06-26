@@ -183,19 +183,12 @@ const openEditFromBudget = (item: ExpenseItem | IncomeItem | LoanItem | SavingIt
     <AppLayout>
         <div class="space-y-6">
 
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ pageHeader.title }}</h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ pageHeader.subtitle }}</p>
-                </div>
-                <div class="flex items-center gap-2">
-                <button class="btn-primary text-sm flex items-center gap-1.5" @click="showCreateModal = true">
-                    <Plus class="w-4 h-4" /> <span class="hidden sm:inline">New Category</span><span class="sm:hidden">Add</span>
-                </button>
-                </div>
+            <div>
+                <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ pageHeader.title }}</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ pageHeader.subtitle }}</p>
             </div>
 
-
+            <div class="flex items-center gap-3">
             <div class="flex gap-1 p-1 bg-gray-100 dark:bg-white/5 rounded-xl w-fit">
                 <button
                     class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all"
@@ -245,6 +238,10 @@ const openEditFromBudget = (item: ExpenseItem | IncomeItem | LoanItem | SavingIt
                         :class="activeSection === 'income' ? 'bg-coin-primary/10 text-coin-primary' : 'bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-gray-400'"
                     >{{ incomes.length }}</span>
                 </button>
+            </div>
+            <button class="btn-primary text-sm flex items-center gap-1.5 shrink-0" @click="showCreateModal = true">
+                <Plus class="w-4 h-4" /> <span class="hidden sm:inline">New Category</span><span class="sm:hidden">Add</span>
+            </button>
             </div>
 
 
