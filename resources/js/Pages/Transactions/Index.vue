@@ -6,6 +6,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { Plus } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
+import { fmtCurrency as fmt } from '@/constants/format';
 
 const generateUUID = (): string => {
     if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -33,7 +34,7 @@ const props = defineProps<{
         current_page: number;
         last_page: number;
     };
-    categories: Array<{ id: number; name: string; type: TxType; color: string }>;
+    categories: Array<{ id: number; name: string; type: TxType; color: string; target_amount: number | null }>;
     filters: { month: number; year: number; type?: string; category_id?: string; date?: string; search?: string };
     typeCounts: { expense: number; income: number; saving: number; loan: number };
     dayTotals: Record<string, number>;
@@ -140,7 +141,6 @@ const formatDateHeader = (dateStr: string) => {
     return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 };
 
-const fmt = (n: number) => '৳' + new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
 const amountColor = (type: TxType) => {
     if (type === 'income') return 'text-emerald-600 dark:text-emerald-400';
@@ -296,7 +296,7 @@ const confirmDelete = () => {
                                 <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{{ t.category.name }} · {{ formatTransactedAt(t.transacted_at) }}</div>
                             </div>
                             <div class="font-semibold text-sm flex-shrink-0" :class="amountColor(t.type)">
-                                {{ amountPrefix(t.type) }}৳{{ new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(t.amount) }}
+                                {{ amountPrefix(t.type) }}{{ fmt(t.amount) }}
                             </div>
                         </div>
                     </div>
@@ -384,7 +384,7 @@ const confirmDelete = () => {
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
                     <SearchableSelect
                         v-model="form.category_id"
-                        :options="categories.filter(c => c.type === form.type).map(c => ({ value: String(c.id), label: c.name }))"
+                        :options="categories.filter(c => c.type === form.type && (form.type !== 'saving' || c.target_amount !== null)).map(c => ({ value: String(c.id), label: c.name }))"
                         placeholder="Select category"
                         required
                     />
@@ -460,7 +460,7 @@ const confirmDelete = () => {
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
                     <SearchableSelect
                         v-model="editForm.category_id"
-                        :options="categories.filter(c => c.type === editForm.type).map(c => ({ value: String(c.id), label: c.name }))"
+                        :options="categories.filter(c => c.type === editForm.type && (editForm.type !== 'saving' || c.target_amount !== null)).map(c => ({ value: String(c.id), label: c.name }))"
                         placeholder="Select category"
                         required
                     />

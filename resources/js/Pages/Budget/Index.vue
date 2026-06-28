@@ -6,6 +6,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import { CheckCircle, MoreVertical, Plus } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
+import { fmtCurrency as fmt } from '@/constants/format';
 
 type ExpenseItem = {
     category_id: number; name: string; color: string; icon: string;
@@ -72,7 +73,6 @@ const tabMeta: Record<Tab, { title: string; subtitle: string }> = {
 
 const pageHeader = computed(() => tabMeta[activeSection.value]);
 
-const fmt = (v: number) => `৳${new Intl.NumberFormat('en', { minimumFractionDigits: 2 }).format(v)}`;
 
 const itemPct = (item: ExpenseItem) =>
     item.budget ? Math.min(100, (item.spent / item.budget) * 100) : 0;
@@ -109,7 +109,7 @@ const totalLoanRemaining = computed(() => activeLoansForTotal.value.reduce((s, l
 
 const isCompleted = (item: SavingItem) => item.is_withdrawn;
 const totalSavedAllTime = computed(() => props.savings.filter(sv => !sv.is_withdrawn).reduce((s, sv) => s + sv.total_saved, 0));
-const totalSavingTarget = computed(() => props.savings.filter(sv => !sv.is_withdrawn).reduce((s, sv) => s + (sv.target_amount ?? 0), 0));
+const totalSavingTarget = computed(() => props.savings.filter(sv => !sv.is_withdrawn).reduce((s, sv) => s + (sv.target_amount !== null ? sv.target_amount : sv.monthly_amount), 0));
 
 const showCompletedLoans = ref(false);
 const activeLoans = computed(() => props.loans.filter(l => !l.is_settled));
@@ -575,7 +575,7 @@ const openEditFromBudget = (item: ExpenseItem | IncomeItem | LoanItem | SavingIt
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-xs text-gray-400 dark:text-gray-500">{{ fmt(item.total_saved) }}</span>
-                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">No target</span>
+                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400">FDR</span>
                             </div>
                         </template>
 

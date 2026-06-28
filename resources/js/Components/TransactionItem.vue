@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { fmtCurrency } from '@/constants/format';
+
 const props = defineProps<{
     transaction: {
         id: number;
@@ -10,8 +12,6 @@ const props = defineProps<{
     };
 }>();
 
-const fmt = (amount: number) =>
-    new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
 
 const fmtDate = (dateStr: string) =>
     new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(dateStr));
@@ -40,7 +40,7 @@ const fmtDate = (dateStr: string) =>
             class="font-semibold text-sm flex-shrink-0"
             :class="transaction.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'"
         >
-            {{ transaction.type === 'income' ? '+' : '-' }}৳{{ fmt(transaction.amount) }}
+            {{ transaction.type === 'income' ? '+' : '-' }}{{ fmtCurrency(transaction.amount) }}
         </div>
     </div>
 </template>

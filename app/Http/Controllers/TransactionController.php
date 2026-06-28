@@ -257,6 +257,7 @@ class TransactionController extends Controller
             'type' => $c->type,
             'color' => $c->color,
             'icon' => $c->icon,
+            'target_amount' => $c->target_amount,
         ])->values();
     }
 }

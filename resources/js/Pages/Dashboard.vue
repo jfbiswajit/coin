@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip, Legend } from 'chart.js';
 import { ArrowRight, Landmark, PiggyBank, TrendingDown, Wallet } from 'lucide-vue-next';
 import { onMounted, ref, computed } from 'vue';
+import { fmtCurrency } from '@/constants/format';
 import { Bar, Doughnut } from 'vue-chartjs';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
@@ -99,7 +100,7 @@ const chartOptions = {
 const ready = ref(false);
 onMounted(() => requestAnimationFrame(() => { ready.value = true; }));
 
-const fmt = (v: number) => '৳' + new Intl.NumberFormat('en', { minimumFractionDigits: 2 }).format(Math.abs(v));
+const fmt = (v: number) => fmtCurrency(Math.abs(v));
 
 const spentPct = computed(() =>
     props.incomeThisMonth > 0

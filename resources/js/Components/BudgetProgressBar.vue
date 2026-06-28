@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { fmtCurrency as fmt } from '@/constants/format';
 
 const props = defineProps<{
     name: string;
@@ -15,7 +16,6 @@ const pct = computed(() => {
 
 const overBudget = computed(() => props.budget !== null && props.spent > props.budget);
 
-const fmt = (v: number) => `৳${new Intl.NumberFormat('en', { minimumFractionDigits: 2 }).format(v)}`;
 </script>
 
 <template>
