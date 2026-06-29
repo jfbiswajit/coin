@@ -344,7 +344,15 @@
   applyTheme();
 
   // ── Modals ─────────────────────────────────────────────────────
-  function openCfg() { document.getElementById('cfg-overlay').classList.add('open'); }
+  async function openCfg() {
+    document.getElementById('cfg-overlay').classList.add('open');
+    const db = await openDB();
+    const items = await dbGetAll(db);
+    const hasData = items.length > 0;
+    document.querySelector('.cfg-copy').style.display = hasData ? 'flex' : 'none';
+    document.querySelector('.cfg-delete').style.display = hasData ? 'flex' : 'none';
+    document.querySelectorAll('.cfg-divider')[1].style.display = hasData ? 'block' : 'none';
+  }
   function closeCfg() { document.getElementById('cfg-overlay').classList.remove('open'); }
   function closeCfgIfOutside(e) { if (e.target === document.getElementById('cfg-overlay')) closeCfg(); }
   if (!SB_URL || !SB_KEY) openCfg();
