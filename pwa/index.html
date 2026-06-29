@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coin">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<title>Coin</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #ebebeb;
+    --text: #111111;
+    --muted: #aaaaaa;
+    --green: #16a34a;
+    --red: #dc2626;
+    --radius: 16px;
+  }
+
+  body[data-theme="dark"] {
+    --bg: #111111;
+    --card: #1c1c1c;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #555555;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) {
+      --bg: #111111;
+      --card: #1c1c1c;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --muted: #555555;
+    }
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100dvh;
+    padding: 0 0 100px;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .header {
+    padding: 48px 20px 12px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header-left h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .gear-btn { background: none; border: none; cursor: pointer; color: var(--muted); display: flex; align-items: center; padding: 2px; }
+  .gear-btn:active { color: var(--text); }
+  .gear-btn svg { width: 18px; height: 18px; }
+  .header-date { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .total { text-align: right; }
+  .total-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .total-amount { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; color: var(--green); font-variant-numeric: tabular-nums; }
+
+  /* offline badge */
+  .offline-badge {
+    display: none;
+    margin: 0 16px 8px;
+    background: #7c3aed22;
+    border: 1px solid #7c3aed44;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #7c3aed;
+  }
+  body.offline .offline-badge { display: block; }
+  .online-badge {
+    display: none;
+    margin: 0 16px 8px;
+    background: #16a34a22;
+    border: 1px solid #16a34a44;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #16a34a;
+  }
+  body.just-online .online-badge { display: block; }
+
+  /* cfg modal */
+  .cfg-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 100;
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .cfg-overlay.open { display: flex; }
+  .cfg-sheet {
+    background: var(--card); border-radius: 20px;
+    padding: 24px 20px; width: 100%; max-width: 380px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .cfg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .cfg-title { font-size: 16px; font-weight: 600; }
+  .cfg-close { background: none; border: none; font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; }
+  .cfg-close:active { color: var(--text); }
+  .cfg-sheet input {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; font-size: 13px; font-family: monospace;
+    color: var(--text); outline: none; width: 100%;
+  }
+  .cfg-sheet input:focus { border-color: var(--text); }
+  .cfg-sheet input::placeholder { color: var(--muted); }
+  .cfg-divider { border: none; border-top: 1px solid var(--border); }
+  .appearance-row { display: flex; align-items: center; justify-content: space-between; }
+  .appearance-row span { font-size: 14px; }
+  .cfg-copy {
+    background: var(--border); color: var(--text); border: none;
+    border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .cfg-copy:active { opacity: 0.7; }
+  .cfg-delete {
+    background: #3a1010; color: #ff5f57; border: none;
+    border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .cfg-delete:active { opacity: 0.7; }
+  .cfg-save {
+    background: var(--text); color: var(--bg); border: none;
+    border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 600;
+    cursor: pointer; margin-top: 2px;
+  }
+
+  /* FAB */
+  .fab {
+    position: fixed; bottom: 32px; right: 28px;
+    width: 56px; height: 56px;
+    background: var(--text); color: var(--bg);
+    border: none; border-radius: 50%;
+    font-size: 28px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    z-index: 50;
+  }
+  .fab:active { opacity: 0.8; }
+
+  /* add modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 100;
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-sheet {
+    background: var(--card); border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 480px;
+    padding: 24px 20px 40px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-close { background: none; border: none; font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; }
+  .modal-close:active { color: var(--text); }
+  .modal-field {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; font-size: 16px; color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    outline: none; width: 100%;
+  }
+  .modal-field:focus { border-color: var(--text); }
+  .modal-field::placeholder { color: var(--muted); }
+  .modal-field::-webkit-inner-spin-button { display: none; }
+  .modal-submit {
+    background: var(--text); color: var(--bg); border: none;
+    border-radius: 12px; padding: 15px; font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-top: 4px;
+  }
+  .modal-submit:active { opacity: 0.8; }
+
+  /* grouped entries */
+  .group { margin: 0 0 8px; }
+  .group-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 12px 20px 6px;
+  }
+  .group-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+  .group-sum { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .entries { margin: 0 16px; display: flex; flex-direction: column; gap: 1px; }
+  .entry {
+    background: var(--card); padding: 10px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .entry:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+  .entry:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+  .entry:only-child { border-radius: var(--radius); }
+  .entry-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .entry-time { font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+  .entry-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .entry-amount { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .sync-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--muted); flex-shrink: 0; opacity: 0.5;
+  }
+  .sync-dot.synced { background: var(--green); opacity: 1; }
+  .entry-del { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; line-height: 1; padding: 0 2px; opacity: 0.5; }
+  .entry-del:active { color: var(--red); opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-left">
+      <h1>Coin</h1>
+      <button class="gear-btn" onclick="openCfg()" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="header-date" id="date-label"></div>
+  </div>
+  <div class="total">
+    <div class="total-label">Total</div>
+    <div class="total-amount" id="total">৳0</div>
+  </div>
+</div>
+
+<div class="offline-badge" id="offline-badge">Offline. Changes will sync on reconnect.</div>
+<div class="online-badge" id="online-badge">Back online. Syncing...</div>
+
+<div class="cfg-overlay" id="cfg-overlay" onclick="closeCfgIfOutside(event)">
+  <div class="cfg-sheet">
+    <div class="cfg-header">
+      <span class="cfg-title">Settings</span>
+      <button class="cfg-close" onclick="closeCfg()">×</button>
+    </div>
+    <div class="appearance-row">
+      <span>Appearance</span>
+      <button id="theme-toggle-btn" onclick="toggleTheme()" style="background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;padding:4px;">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"></svg>
+      </button>
+    </div>
+    <div class="cfg-divider"></div>
+    <input type="text" id="sb-url" placeholder="Supabase URL (https://xxx.supabase.co)" />
+    <input type="text" id="sb-key" placeholder="Publishable key" />
+    <button class="cfg-save" onclick="saveCfg()">Connect</button>
+    <div class="cfg-divider"></div>
+    <button class="cfg-copy" onclick="copyRecords()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy all records
+    </button>
+    <button class="cfg-delete" onclick="deleteAllRecords()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      Delete all records
+    </button>
+  </div>
+</div>
+
+<button class="fab" onclick="openModal()">+</button>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalIfOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <span class="modal-title">Add expense</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <input type="text" id="item-input" class="modal-field" placeholder="Item" autocomplete="on" enterkeyhint="next" />
+    <input type="number" id="amount-input" class="modal-field" placeholder="Amount" inputmode="decimal" enterkeyhint="done" />
+    <button class="modal-submit" onclick="addEntry()">Save</button>
+  </div>
+</div>
+
+<div id="all-entries"></div>
+
+<script>
+  const DB_NAME = 'coin-db', DB_VER = 1, STORE = 'expenses';
+
+  // ── IndexedDB helpers ──────────────────────────────────────────
+  function openDB() {
+    return new Promise((res, rej) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE))
+          db.createObjectStore(STORE, { keyPath: 'id' });
+      };
+      req.onsuccess = e => res(e.target.result);
+      req.onerror = () => rej(req.error);
+    });
+  }
+  function dbGetAll(db) {
+    return new Promise((res, rej) => {
+      const req = db.transaction(STORE,'readonly').objectStore(STORE).getAll();
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => rej(req.error);
+    });
+  }
+  function dbPut(db, item) {
+    return new Promise((res, rej) => {
+      const req = db.transaction(STORE,'readwrite').objectStore(STORE).put(item);
+      req.onsuccess = () => res();
+      req.onerror = () => rej(req.error);
+    });
+  }
+  function dbDelete(db, id) {
+    return new Promise((res, rej) => {
+      const req = db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);
+      req.onsuccess = () => res();
+      req.onerror = () => rej(req.error);
+    });
+  }
+  async function dbClear(db) {
+    return new Promise((res, rej) => {
+      const req = db.transaction(STORE,'readwrite').objectStore(STORE).clear();
+      req.onsuccess = () => res();
+      req.onerror = () => rej(req.error);
+    });
+  }
+
+  // ── Config ─────────────────────────────────────────────────────
+  let SB_URL = localStorage.getItem('sb_url') || '';
+  let SB_KEY  = localStorage.getItem('sb_key')  || '';
+  if (SB_URL) document.getElementById('sb-url').value = SB_URL;
+  if (SB_KEY)  document.getElementById('sb-key').value  = SB_KEY;
+
+  document.getElementById('date-label').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+
+  // ── Theme ──────────────────────────────────────────────────────
+  const SUN  = '<circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  const MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  const systemDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
+  let isDark = localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : systemDark();
+  function applyTheme() {
+    document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.getElementById('theme-icon').innerHTML = isDark ? SUN : MOON;
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }
+  function toggleTheme() { isDark = !isDark; applyTheme(); }
+  applyTheme();
+
+  // ── Modals ─────────────────────────────────────────────────────
+  function openCfg() { document.getElementById('cfg-overlay').classList.add('open'); }
+  function closeCfg() { document.getElementById('cfg-overlay').classList.remove('open'); }
+  function closeCfgIfOutside(e) { if (e.target === document.getElementById('cfg-overlay')) closeCfg(); }
+  if (!SB_URL || !SB_KEY) openCfg();
+
+  function saveCfg() {
+    SB_URL = document.getElementById('sb-url').value.trim().replace(/\/$/, '');
+    SB_KEY  = document.getElementById('sb-key').value.trim();
+    if (!SB_URL || !SB_KEY) return;
+    localStorage.setItem('sb_url', SB_URL);
+    localStorage.setItem('sb_key',  SB_KEY);
+    closeCfg();
+    init();
+  }
+
+  function openModal() {
+    document.getElementById('modal-overlay').classList.add('open');
+    document.getElementById('item-input').focus();
+  }
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.getElementById('item-input').value  = '';
+    document.getElementById('amount-input').value = '';
+  }
+  function closeModalIfOutside(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+  // ── Supabase helpers ───────────────────────────────────────────
+  function h() {
+    return { 'Content-Type':'application/json', 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
+  }
+  function isOnline() { return navigator.onLine && SB_URL && SB_KEY; }
+
+  function genId() { return 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2); }
+
+  // ── Fetch from Supabase → update IndexedDB cache ───────────────
+  async function fetchFromSupabase() {
+    const res = await fetch(`${SB_URL}/rest/v1/expenses?order=created_at.desc&limit=500`, { headers: h() });
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    const db = await openDB();
+    await dbClear(db);
+    for (const row of data) await dbPut(db, { ...row, synced: true });
+    return data.map(r => ({ ...r, synced: true }));
+  }
+
+  // ── Load & render ──────────────────────────────────────────────
+  async function loadAndRender() {
+    let items;
+    if (isOnline()) {
+      try {
+        items = await fetchFromSupabase();
+      } catch {
+        items = await loadFromDB();
+      }
+    } else {
+      items = await loadFromDB();
+    }
+    render(items);
+  }
+
+  async function loadFromDB() {
+    const db = await openDB();
+    return await dbGetAll(db);
+  }
+
+  // ── Add entry ──────────────────────────────────────────────────
+  async function addEntry() {
+    const item   = document.getElementById('item-input').value.trim();
+    const amount = parseFloat(document.getElementById('amount-input').value);
+    if (!item || !amount || amount <= 0) return;
+
+    if (isOnline()) {
+      // Write directly to Supabase
+      const res = await fetch(`${SB_URL}/rest/v1/expenses`, {
+        method: 'POST',
+        headers: { ...h(), 'Prefer': 'return=representation' },
+        body: JSON.stringify({ item, amount })
+      });
+      if (!res.ok) return;
+      closeModal();
+      await loadAndRender();
+    } else {
+      // Save locally with pending flag
+      const entry = { id: genId(), item, amount, created_at: new Date().toISOString(), synced: false };
+      const db = await openDB();
+      await dbPut(db, entry);
+      closeModal();
+      render(await dbGetAll(db));
+    }
+  }
+
+  // ── Delete entry ───────────────────────────────────────────────
+  async function delEntry(id) {
+    if (isOnline() && !id.startsWith('local-')) {
+      await fetch(`${SB_URL}/rest/v1/expenses?id=eq.${id}`, { method: 'DELETE', headers: h() });
+      await loadAndRender();
+    } else {
+      const db = await openDB();
+      await dbDelete(db, id);
+      render(await dbGetAll(db));
+    }
+  }
+
+  // ── Sync pending offline entries ───────────────────────────────
+  async function syncPending() {
+    if (!isOnline()) return;
+    const db = await openDB();
+    const pending = (await dbGetAll(db)).filter(e => !e.synced);
+    if (!pending.length) return;
+    for (const entry of pending) {
+      try {
+        const res = await fetch(`${SB_URL}/rest/v1/expenses`, {
+          method: 'POST',
+          headers: { ...h(), 'Prefer': 'return=representation' },
+          body: JSON.stringify({ item: entry.item, amount: entry.amount, created_at: entry.created_at })
+        });
+        if (res.ok) await dbDelete(db, entry.id);
+      } catch {}
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────
+  function localDateKey(date) {
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  }
+  function groupLabel(iso) {
+    const now  = new Date(), d = new Date(iso);
+    const yest = new Date(now); yest.setDate(yest.getDate() - 1);
+    if (localDateKey(d) === localDateKey(now))  return 'Today';
+    if (localDateKey(d) === localDateKey(yest)) return 'Yesterday';
+    return d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  }
+  function dateKey(iso) { return localDateKey(new Date(iso)); }
+  function esc(s) { return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function render(items) {
+    items = [...items].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    const container = document.getElementById('all-entries');
+    const total     = document.getElementById('total');
+    if (!items.length) { container.innerHTML = ''; total.textContent = '৳0'; return; }
+
+    const sum = items.reduce((a,i) => a + parseFloat(i.amount), 0);
+    total.textContent = '৳' + sum.toLocaleString();
+
+    const groups = {}, order = [];
+    for (const item of items) {
+      const key = dateKey(item.created_at);
+      if (!groups[key]) { groups[key] = { label: groupLabel(item.created_at), items:[], sum:0 }; order.push(key); }
+      groups[key].items.push(item);
+      groups[key].sum += parseFloat(item.amount);
+    }
+
+    container.innerHTML = order.map(key => {
+      const g = groups[key];
+      const rows = g.items.map(i => {
+        const t   = new Date(i.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+        const dot = `<span class="sync-dot ${i.synced ? 'synced' : ''}"></span>`;
+        return `<div class="entry">
+          <div class="entry-left">
+            <span class="entry-time">${t}</span>
+            <span class="entry-name">${esc(i.item)}</span>
+          </div>
+          <div class="entry-right">
+            <span class="entry-amount">৳${parseFloat(i.amount).toLocaleString()}</span>
+            ${dot}
+            <button class="entry-del" onclick="delEntry('${i.id}')">×</button>
+          </div>
+        </div>`;
+      }).join('');
+      return `<div class="group">
+        <div class="group-header">
+          <span class="group-label">${g.label}</span>
+          <span class="group-sum">৳${g.sum.toLocaleString()}</span>
+        </div>
+        <div class="entries">${rows}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Connectivity ───────────────────────────────────────────────
+  window.addEventListener('online', async () => {
+    document.body.classList.remove('offline');
+    document.body.classList.add('just-online');
+    await syncPending();
+    await loadAndRender();
+    setTimeout(() => document.body.classList.remove('just-online'), 3000);
+  });
+  window.addEventListener('offline', () => document.body.classList.add('offline'));
+  if (!navigator.onLine) document.body.classList.add('offline');
+
+  // ── Enter key navigation ───────────────────────────────────────
+  document.getElementById('item-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('amount-input').focus(); }
+  });
+  document.getElementById('amount-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addEntry(); }
+  });
+
+  // ── Init ───────────────────────────────────────────────────────
+  async function copyRecords() {
+    let items;
+    if (isOnline()) {
+      try { items = await fetchFromSupabase(); } catch { items = await loadFromDB(); }
+    } else {
+      items = await loadFromDB();
+    }
+    items.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const text = items.map(i => {
+      const d = new Date(i.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+      return `${i.item} - ${d} - ৳${parseFloat(i.amount).toLocaleString()}`;
+    }).join('\n');
+    await navigator.clipboard.writeText(text);
+    const btn = document.querySelector('.cfg-copy');
+    btn.textContent = 'Copied!';
+    setTimeout(() => {
+      btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy all records';
+    }, 2000);
+  }
+
+  async function deleteAllRecords() {
+    if (!confirm('Delete all records? This cannot be undone.')) return;
+    const db = await openDB();
+    await dbClear(db);
+    if (isOnline()) {
+      await fetch(`${SB_URL}/rest/v1/expenses?id=neq.00000000-0000-0000-0000-000000000000`, { method: 'DELETE', headers: h() });
+    }
+    closeCfg();
+    render([]);
+  }
+
+  async function init() {
+    await syncPending();
+    await loadAndRender();
+  }
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+  init();
+</script>
+</body>
+</html>
