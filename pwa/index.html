@@ -207,6 +207,21 @@
   .sync-dot.synced { background: var(--green); opacity: 1; }
   .entry-del { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; line-height: 1; padding: 0 2px; opacity: 0.5; }
   .entry-del:active { color: var(--red); opacity: 1; }
+
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px;
+    min-height: 40dvh;
+    user-select: none;
+  }
+  .empty-state-icon {
+    width: 56px; height: 56px;
+    background: var(--card); border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); margin-bottom: 4px;
+  }
+  .empty-state-title { font-size: 16px; font-weight: 600; color: var(--text); }
+  .empty-state-hint { font-size: 13px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -491,7 +506,21 @@
     items = [...items].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
     const container = document.getElementById('all-entries');
     const total     = document.getElementById('total');
-    if (!items.length) { container.innerHTML = ''; total.textContent = '৳0'; return; }
+    if (!items.length) {
+      container.innerHTML = `<div class="empty-state">
+        <div class="empty-state-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="3"/>
+            <path d="M2 10h20"/>
+            <path d="M7 15h2"/><path d="M12 15h5"/>
+          </svg>
+        </div>
+        <span class="empty-state-title">No expenses yet</span>
+        <span class="empty-state-hint">Tap + to add your first entry</span>
+      </div>`;
+      total.textContent = '৳0';
+      return;
+    }
 
     const sum = items.reduce((a,i) => a + parseFloat(i.amount), 0);
     total.textContent = '৳' + sum.toLocaleString();
