@@ -1,34 +1,44 @@
 ---
 name: expenses
-description: Parse expenses from WhatsApp messages, plain text, or invoice/receipt images and create transactions. Use when the user provides expense lines or attaches an invoice photo.
-argument-hint: "<WhatsApp messages, plain text lines, or invoice image path>"
+description: Sync expenses from Supabase or parse an invoice/receipt image and create transactions. Invoke with no args to sync from Supabase, or pass an image path/attachment for invoice parsing.
+argument-hint: "[invoice image path] — omit to sync from Supabase"
 ---
 
-Parse expenses from `$ARGUMENTS` (or an image attached to the conversation) and create transactions.
+## Context
+
+The user logs expenses on the go via a companion PWA hosted on Netlify (accessible from phone/outside home). That PWA stores entries in a Supabase `expenses` table (columns: `id`, `item`, `amount`, `created_at`). When back at the machine, the user syncs those entries into this local Laravel app via this skill, then the Supabase table is cleared for the next batch.
+
+Two sources:
+- `/expenses` (no args) — sync from Supabase
+- `/expenses <image>` — parse a receipt or invoice photo
+
+---
 
 ## Step 1 — Detect input type
 
-Determine whether the input is:
-- **Image/invoice** — user attached a photo or provided an image path → follow the Image path below
-- **Text** — WhatsApp messages or plain text lines → follow the Text path below
+- **No args** → Supabase path
+- **Image path or attached image** → Image path
 
 ---
 
-### Text path
+### Supabase path
 
-Extract each expense as `{ item, amount, date }`.
+Fetch all rows from Supabase:
 
-Supported formats:
-- Plain: `Chicken 400`
-- WhatsApp: `[7:18 PM, 3/20/2026] Biswajit Biswas: Chicken 400`
+```bash
+curl -s "https://zzgtbqjepmxizljfxfxf.supabase.co/rest/v1/expenses?order=created_at.asc" \
+  -H "apikey: sb_publishable_kYq-Pxk-jWoTyFGaksAnfg_C-sKyfMh" \
+  -H "Authorization: Bearer sb_publishable_kYq-Pxk-jWoTyFGaksAnfg_C-sKyfMh"
+```
 
-Rules:
-- `item` = descriptive text (e.g. "Chicken", "Fish fillets")
-- `amount` = numeric value (integer or decimal)
-- `date` = date from WhatsApp timestamp if present, otherwise today's date (`YYYY-MM-DD`)
-- Skip lines without a recognisable item + amount pair
-- **Refine the title** — fix typos, expand abbreviations, improve clarity (e.g. "Vegitables" → "Vegetables", "Mango 2 kg" → "Mango (2 kg)"). Keep it concise.
+Extract each row as `{ item, amount, date }` from the JSON response:
+- `item` = `item` field
+- `amount` = `amount` field
+- `date` = date part of `created_at` (YYYY-MM-DD)
+- **Refine the title** — fix typos, expand abbreviations (e.g. "Mobie cover" → "Mobile Cover")
 - Set `invoice_total = null`
+
+If the table is empty, stop and tell the user there is nothing to sync.
 
 ---
 
@@ -36,17 +46,20 @@ Rules:
 
 Analyze the image visually and extract:
 - Every line item with its amount
-- The transaction date (from the invoice date, if present; otherwise today)
-- The invoice grand total (the final total printed on the invoice, if present) → save as `invoice_total`
+- The transaction date (from the invoice date if present, otherwise today)
+- The invoice grand total (if printed on the invoice) → save as `invoice_total`
 
-Apply the same title refinement rules as the text path.
+Apply the same title refinement rules as above.
 
 ---
 
 ## Step 2 — Fetch expense categories
 
-```sql
-SELECT id, name FROM categories WHERE user_id = 1 AND type = 'expense' ORDER BY name
+```bash
+php artisan tinker --execute "
+use App\Models\Category;
+Category::where('user_id', 1)->where('type', 'expense')->orderBy('name')->get(['id', 'name'])->each(fn(\$c) => print(\$c->id . ' | ' . \$c->name . PHP_EOL));
+"
 ```
 
 ## Step 3 — Map each item to a category
@@ -113,3 +126,16 @@ echo 'Inserted ' . count(\$transactions) . ' transactions';
 ```
 
 Confirm with the count of inserted transactions.
+
+## Step 6 — Truncate Supabase (Supabase path only)
+
+Only run this step if the input was from Supabase. After successful insertion, delete all rows from the Supabase table:
+
+```bash
+curl -s -X DELETE "https://zzgtbqjepmxizljfxfxf.supabase.co/rest/v1/expenses?id=not.is.null" \
+  -H "apikey: sb_publishable_kYq-Pxk-jWoTyFGaksAnfg_C-sKyfMh" \
+  -H "Authorization: Bearer sb_publishable_kYq-Pxk-jWoTyFGaksAnfg_C-sKyfMh" \
+  -H "Prefer: return=minimal"
+```
+
+Confirm to the user that Supabase has been cleared and is ready for new entries.
