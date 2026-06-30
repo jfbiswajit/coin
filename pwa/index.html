@@ -433,6 +433,12 @@
   }
 
   // ── Add entry ──────────────────────────────────────────────────
+  function resetForm() {
+    document.getElementById('item-input').value  = '';
+    document.getElementById('amount-input').value = '';
+    document.getElementById('item-input').focus();
+  }
+
   async function addEntry() {
     const item   = document.getElementById('item-input').value.trim();
     const amount = parseFloat(document.getElementById('amount-input').value);
@@ -446,14 +452,14 @@
         body: JSON.stringify({ item, amount })
       });
       if (!res.ok) return;
-      closeModal();
+      resetForm();
       await loadAndRender();
     } else {
       // Save locally with pending flag
       const entry = { id: genId(), item, amount, created_at: new Date().toISOString(), synced: false };
       const db = await openDB();
       await dbPut(db, entry);
-      closeModal();
+      resetForm();
       render(await dbGetAll(db));
     }
   }
